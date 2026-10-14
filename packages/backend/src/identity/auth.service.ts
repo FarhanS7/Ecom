@@ -52,6 +52,11 @@ export interface SafeUser {
 /** Minimal query surface shared by Sql and its transactions. */
 export type Queryable = Pick<Sql, 'unsafe'>;
 
+/** Structural client for test doubles: anything with postgres's unsafe(). */
+export interface TxClient {
+  unsafe: Sql['unsafe'];
+}
+
 export interface SessionIssue {
   user: SafeUser;
   familyId: string;
@@ -109,7 +114,9 @@ function toSafeUser(row: DbUser): SafeUser {
   };
 }
 
-async function platformRoleKeys(tx: Queryable, userId: string): Promise<string[]> {
+export { toSafeUser };
+
+async function platformRoleKeys(tx: TxClient, userId: string): Promise<string[]> {
   const rows = (await tx.unsafe(
     `SELECT r."key" FROM "platform_roles" r JOIN "user_platform_roles" ur ON ur."role_id" = r."id" WHERE ur."user_id" = $1 ORDER BY r."key";`,
     [userId],
@@ -157,7 +164,7 @@ function newRefreshPair(): { raw: string; hash: string } {
 }
 
 async function insertSession(
-  tx: Queryable,
+  tx: TxClient,
   userId: string,
 ): Promise<{ familyId: string; refreshRaw: string }> {
   const pair = newRefreshPair();
