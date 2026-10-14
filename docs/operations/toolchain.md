@@ -84,12 +84,11 @@ Every workspace package (`apps/*`, `packages/*`, `db/*`) must have:
 ### Documented exception: `@shopscale/backend` module resolution
 
 `packages/backend` uses `module ESNext` + `moduleResolution Bundler` with
-`verbatimModuleSyntax: false` and an internal `@backend/*` alias. Reason: the
-package has 11 intra-package relative imports (`platform` → `db/client`, …)
-that NodeNext resolution rejects without explicit `.js` extensions on every
-internal edge, while the public contract (exports map, `dist/*.d.ts`) is
-unchanged. Revisit if the package is split or if NodeNext gains ergonomic
-intra-package imports. Recorded T004; history in git.
+`verbatimModuleSyntax: false`. Reason: the package has 11 intra-package
+relative imports (`platform` → `db/client`, …) written with explicit `.js`
+extensions (the portable ESM pattern: tsc resolves `.js` → `.ts`, Node runs
+the emitted `.js`). The public contract (exports map, `dist/*.d.ts`) is
+unchanged. Revisit if the package is split. Recorded T004; history in git.
 
 ### App/Package `tsconfig.json` (extends base)
 ```json

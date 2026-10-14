@@ -1,10 +1,18 @@
 // @shopscale/backend/db/seed - Deterministic seed script
 // Usage: SEED=42 SIZE=s|m|l|xl tsx src/db/seed.ts
 
-import { db } from './client.js';
+import { getDb } from './client.js';
 import { getEnv } from '@shopscale/config';
 
-const sql = db;
+function redactedDatabaseLabel(url: string): string {
+  // Never print credentials: show host/database only.
+  try {
+    const parsed = new URL(url);
+    return `${parsed.host}${parsed.pathname}`;
+  } catch {
+    return '(unparsable DATABASE_URL, redacted)';
+  }
+}
 
 interface SeedOptions {
   size: 's' | 'm' | 'l' | 'xl';
@@ -32,9 +40,10 @@ function seededRandom(seed: number): () => number {
 async function main() {
   const { size, seed } = parseArgs();
   const random = seededRandom(seed);
-  
+  const sql = getDb();
+
   console.log(`Seeding database: size=${size}, seed=${seed}`);
-  console.log(`Database: ${getEnv().DATABASE_URL}`);
+  console.log(`Database: ${redactedDatabaseLabel(getEnv().DATABASE_URL)}`);
 
   // Verify connection
   await sql`SELECT 1`;

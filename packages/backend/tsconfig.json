@@ -6,11 +6,7 @@
     "rootDir": "./src",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "verbatimModuleSyntax": false,
-    "baseUrl": ".",
-    "paths": {
-      "@backend/*": ["src/*"]
-    }
+    "verbatimModuleSyntax": false
   },
   "include": ["src/**/*"],
   "references": [

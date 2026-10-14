@@ -2,9 +2,10 @@
 // Configuration, transaction boundary, telemetry bootstrap, AuditWriter port
 
 import { getEnv } from '@shopscale/config';
-import { db } from '@backend/db/client';
+import { getDb } from '../db/client.js';
 
 export { getEnv } from '@shopscale/config';
+export { getDb } from '../db/client.js';
 
 export interface Transaction {
   // Minimal transaction interface for domain ports
@@ -17,7 +18,7 @@ export interface UnitOfWork {
 
 export const unitOfWork: UnitOfWork = {
   async run<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
-    const client = db;
+    const client = getDb();
     // In real implementation, this would use db.begin()
     // For now, return a mock transaction
     return callback({} as Transaction);
@@ -53,7 +54,7 @@ export const healthChecks: HealthCheck[] = [
     name: 'database',
     async check() {
       try {
-        await db`SELECT 1`;
+        await getDb()`SELECT 1`;
         return { status: 'ok' };
       } catch {
         return { status: 'fail', detail: 'Database connection failed' };

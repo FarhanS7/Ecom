@@ -1,4 +1,8 @@
 // @shopscale/backend/db/client - PostgreSQL client (Drizzle + postgres.js)
+// Lazy singleton: constructing the module must NEVER throw on missing env.
+// The first call to getSql()/getDb() validates configuration (redacted errors)
+// and connects on demand. Boot code calls getEnv() explicitly to fail fast.
+
 import pg from 'postgres';
 import type { Sql, TransactionSql } from 'postgres';
 import { getEnv } from '@shopscale/config';
@@ -19,7 +23,10 @@ export function getSql(): Sql {
   return sql;
 }
 
-export const db = getSql();
+/** Lazy alias for the shared client. Prefer over holding module-level handles. */
+export function getDb(): Sql {
+  return getSql();
+}
 
 export async function closeSql(): Promise<void> {
   if (sql) {
