@@ -14,6 +14,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -101,6 +102,31 @@ export const storeMemberships = pgTable(
 export type BusinessRow = typeof businesses.$inferSelect;
 export type StoreRow = typeof stores.$inferSelect;
 export type StoreMembershipRow = typeof storeMemberships.$inferSelect;
+
+export const storeThemes = pgTable('store_themes', {
+  // Cross-module FK (→ stores.id, ON DELETE CASCADE) is same-module here.
+  storeId: uuid('store_id')
+    .primaryKey()
+    .references(() => stores.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull().default(1),
+  approvedTokens: jsonb('approved_tokens').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
+export const storeContent = pgTable('store_content', {
+  storeId: uuid('store_id')
+    .primaryKey()
+    .references(() => stores.id, { onDelete: 'cascade' }),
+  version: integer('version').notNull().default(1),
+  featuredIds: jsonb('featured_ids').notNull().default([]),
+  headline: text('headline'),
+  socials: jsonb('socials').notNull().default({}),
+  swatches: jsonb('swatches').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
+export type StoreThemeRow = typeof storeThemes.$inferSelect;
+export type StoreContentRow = typeof storeContent.$inferSelect;
 
 export const storeInvitations = pgTable(
   'store_invitations',

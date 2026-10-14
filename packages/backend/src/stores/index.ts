@@ -2,6 +2,8 @@
 export * from './schema.js';
 export * from './permissions.js';
 export * from './onboarding.service.js';
+export * from './theme.service.js';
+export * from './channel.service.js';
 import type { StoreMembership } from './permissions.js';
 
 export interface Store {
