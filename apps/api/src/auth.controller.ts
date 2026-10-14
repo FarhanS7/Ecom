@@ -4,19 +4,27 @@
 // are set via raw Set-Cookie headers: no @fastify/cookie dependency, full
 // control of flags, and the values are URL-safe by construction (JWT / hex).
 
-import { Body, ConflictException, Controller, HttpCode, Post, Res, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common';
+import { Body, ConflictException, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { getEnv } from '@shopscale/config';
 import {
   AuthError,
   authenticateAccount,
+  extractCookie,
+  getSafeUser,
   registerAccount,
+  revokeFamily,
+  rotateRefresh,
 } from '@shopscale/backend';
+import type { Actor } from '@shopscale/backend';
 import {
   authCookies,
   authResponse,
+  authUser,
   loginRequest,
+  logoutResponse,
   registerRequest,
 } from '@shopscale/contracts';
+import { SessionGuard } from './session.guard.js';
 
 /** Minimal zod-shape: satisfied structurally, no new dependency. */
 interface BodySchema<T> {
@@ -58,6 +66,25 @@ function issueAuthCookies(
     `${authCookies.accessName}=${input.accessToken}; ${cookieFlags(authCookies.accessMaxAgeSeconds, '/')}`,
     `${authCookies.refreshName}=${input.refreshRaw}; ${cookieFlags(7 * 24 * 60 * 60, authCookies.refreshPath)}`,
   ]);
+}
+
+function clearAuthCookies(res: PassthroughReply): void {
+  const expired = 'Max-Age=0; HttpOnly';
+  res.header('Set-Cookie', [
+    `${authCookies.accessName}=; Path=/; ${expired}`,
+    `${authCookies.refreshName}=; Path=${authCookies.refreshPath}; ${expired}`,
+  ]);
+}
+
+interface CookieRequest {
+  headers?: Record<string, string | string[] | undefined>;
+  actor?: Actor;
+}
+
+function refreshCookieOf(req: CookieRequest): string | null {
+  const raw = req.headers?.['cookie'];
+  const header = Array.isArray(raw) ? raw.join('; ') : raw;
+  return extractCookie(header, authCookies.refreshName);
 }
 
 function toAuthErrorResponse(err: unknown): never {
@@ -102,5 +129,57 @@ export class AuthController {
     } catch (err) {
       toAuthErrorResponse(err);
     }
+  }
+
+  @Post('refresh')
+  @HttpCode(200)
+  async refresh(
+    @Req() req: CookieRequest,
+    @Res({ passthrough: true }) res: PassthroughReply,
+  ): Promise<unknown> {
+    const raw = refreshCookieOf(req);
+    if (!raw) {
+      clearAuthCookies(res);
+      throw new UnauthorizedException('Invalid session.');
+    }
+    const outcome = await rotateRefresh(raw);
+    if (outcome.kind === 'rotated') {
+      issueAuthCookies(res, outcome);
+      return authResponse.parse({ user: outcome.user, expiresIn: outcome.expiresIn });
+    }
+    clearAuthCookies(res);
+    throw new UnauthorizedException('Invalid session.');
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  @UseGuards(SessionGuard)
+  async logout(
+    @Req() req: CookieRequest,
+    @Res({ passthrough: true }) res: PassthroughReply,
+  ): Promise<unknown> {
+    if (req.actor) {
+      await revokeFamily(req.actor.familyId);
+    }
+    clearAuthCookies(res);
+    return logoutResponse.parse({ ok: true });
+  }
+
+  @Get('me')
+  @UseGuards(SessionGuard)
+  async me(@Req() req: CookieRequest): Promise<unknown> {
+    if (!req.actor) {
+      throw new UnauthorizedException('Authentication required.');
+    }
+    const user = await getSafeUser(req.actor.userId);
+    if (!user) {
+      throw new UnauthorizedException('Authentication required.');
+    }
+    return authUser.parse({
+      id: user.id,
+      email: user.email,
+      status: user.status,
+      createdAt: user.createdAt,
+    });
   }
 }

@@ -20,7 +20,7 @@ All items are not started. This is the sole implementation status checklist; pha
 
 - [x] [T009: Model global accounts and session records](items/T009.md)
 - [x] [T010: Implement registration and login](items/T010.md)
-- [ ] [T011: Implement refresh rotation and logout](items/T011.md)
+- [x] [T011: Implement refresh rotation and logout](items/T011.md)
 - [ ] Checkpoint after T011: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T012: Implement account recovery and verification](items/T012.md)
 - [ ] [T013: Add authentication throttling and browser protections](items/T013.md)

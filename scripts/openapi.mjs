@@ -60,7 +60,7 @@ try {
   const failures = [];
   if (document.info?.title !== 'ShopScale API') failures.push('info.title');
   if (document.info?.version !== '1.0') failures.push('info.version');
-  for (const p of ['/health/live', '/health/ready', '/v1/ping']) {
+  for (const p of ['/health/live', '/health/ready', '/v1/ping', '/v1/auth/register', '/v1/auth/login', '/v1/auth/refresh', '/v1/auth/logout', '/v1/auth/me']) {
     if (!document.paths?.[p]) failures.push(`paths[${p}]`);
   }
   if (failures.length > 0) {

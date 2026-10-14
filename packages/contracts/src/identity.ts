@@ -46,6 +46,13 @@ export const refreshRequest = z.object({
   refreshToken: z.string().min(1),
 });
 
+/** Logout response: session revoked and cookies cleared. */
+export const logoutResponse = z.object({
+  ok: z.literal(true),
+});
+
+export type LogoutResponse = z.infer<typeof logoutResponse>;
+
 /** Cookie issuance contract (ADR-0004). Refresh is path-scoped to /v1/auth
  * so it is never sent to business routes; logout lives under /v1/auth (T011)
  * so it can still clear it. */
