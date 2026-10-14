@@ -4,14 +4,18 @@
 // are set via raw Set-Cookie headers: no @fastify/cookie dependency, full
 // control of flags, and the values are URL-safe by construction (JWT / hex).
 
-import { Body, ConflictException, Controller, Get, HttpCode, Post, Req, Res, UnauthorizedException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Get, HttpCode, NotFoundException, Post, Req, Res, UnauthorizedException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
 import { getEnv } from '@shopscale/config';
 import {
   AuthError,
   authenticateAccount,
+  confirmPasswordReset,
+  confirmVerification,
   extractCookie,
   getSafeUser,
   registerAccount,
+  requestPasswordReset,
+  requestVerification,
   revokeFamily,
   rotateRefresh,
 } from '@shopscale/backend';
@@ -20,9 +24,13 @@ import {
   authCookies,
   authResponse,
   authUser,
+  flowAccepted,
   loginRequest,
   logoutResponse,
+  passwordResetConfirm,
+  passwordResetRequest,
   registerRequest,
+  verificationConfirm,
 } from '@shopscale/contracts';
 import { SessionGuard } from './session.guard.js';
 
@@ -181,5 +189,49 @@ export class AuthController {
       status: user.status,
       createdAt: user.createdAt,
     });
+  }
+
+  @Post('password-reset/request')
+  @HttpCode(202)
+  async requestReset(@Body() rawBody: unknown): Promise<unknown> {
+    // Always 202 with the same body: unknown emails create nothing and take
+    // an indistinguishable path (no account-existence oracle).
+    const body = parseBody(passwordResetRequest, rawBody);
+    await requestPasswordReset(body.email);
+    return flowAccepted.parse({ ok: true });
+  }
+
+  @Post('password-reset/confirm')
+  @HttpCode(200)
+  async confirmReset(@Body() rawBody: unknown): Promise<unknown> {
+    const body = parseBody(passwordResetConfirm, rawBody);
+    const out = await confirmPasswordReset({ token: body.token, newPassword: body.newPassword });
+    if (!out) {
+      // Unknown, consumed, and expired proofs share one generic 404.
+      throw new NotFoundException('Invalid or expired reset link.');
+    }
+    return flowAccepted.parse({ ok: true });
+  }
+
+  @Post('verify-email/request')
+  @HttpCode(202)
+  @UseGuards(SessionGuard)
+  async requestVerify(@Req() req: CookieRequest): Promise<unknown> {
+    if (!req.actor) {
+      throw new UnauthorizedException('Authentication required.');
+    }
+    await requestVerification(req.actor.userId);
+    return flowAccepted.parse({ ok: true });
+  }
+
+  @Post('verify-email/confirm')
+  @HttpCode(200)
+  async confirmVerify(@Body() rawBody: unknown): Promise<unknown> {
+    const body = parseBody(verificationConfirm, rawBody);
+    const out = await confirmVerification(body.token);
+    if (!out) {
+      throw new NotFoundException('Invalid or expired verification link.');
+    }
+    return flowAccepted.parse({ ok: true });
   }
 }
