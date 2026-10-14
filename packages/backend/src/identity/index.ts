@@ -5,6 +5,7 @@ export * from './session.guard.js';
 export * from './recovery.service.js';
 export * from './demo-delivery.js';
 export * from './rate-limit.js';
+export * from './addresses.js';
 export * from './schema.js';
 export interface User {
   id: string;

@@ -53,6 +53,38 @@ export const logoutResponse = z.object({
 
 export type LogoutResponse = z.infer<typeof logoutResponse>;
 
+/** Structured address fields (server-validated lengths per data model). */
+export const addressFields = z.object({
+  name: z.string().min(1).max(100),
+  line1: z.string().min(1).max(200),
+  line2: z.string().max(200).optional(),
+  city: z.string().min(1).max(100),
+  region: z.string().min(1).max(100),
+  postalCode: z.string().min(1).max(20),
+  country: z
+    .string()
+    .length(2)
+    .transform((code) => code.toUpperCase()),
+  phone: z.string().max(30).optional(),
+});
+
+export type AddressFields = z.infer<typeof addressFields>;
+
+/** Safe address DTO: owner-implicit (self context), no user id. */
+export const addressResponse = z.object({
+  id: z.string().uuid(),
+  fields: addressFields,
+  createdAt: z.string().datetime(),
+});
+
+export type AddressResponse = z.infer<typeof addressResponse>;
+
+export const addressListResponse = z.object({
+  items: z.array(addressResponse),
+});
+
+export type AddressListResponse = z.infer<typeof addressListResponse>;
+
 /** Password-reset request: email only. The response is ALWAYS generic
  * (non-enumerating); unknown emails create nothing. */
 export const passwordResetRequest = z.object({

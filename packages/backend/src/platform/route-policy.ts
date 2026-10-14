@@ -46,6 +46,11 @@ export const ROUTE_POLICY: readonly RoutePolicy[] = [
   { method: 'POST', path: '/v1/admin/stores/{storeId}/approve', access: { kind: 'platformAdmin' } },
   { method: 'POST', path: '/v1/admin/stores/{storeId}/suspend', access: { kind: 'platformAdmin' } },
   { method: 'POST', path: '/v1/invitations/accept', access: { kind: 'session', note: 'Email-matched, one-use.' } },
+  { method: 'GET', path: '/v1/me/addresses', access: { kind: 'session', note: 'Owner-scoped list.' } },
+  { method: 'POST', path: '/v1/me/addresses', access: { kind: 'session', note: 'Validated fields.' } },
+  { method: 'GET', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped read; generic 404.' } },
+  { method: 'PATCH', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped write; generic 404.' } },
+  { method: 'DELETE', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped delete; snapshots (not FKs) for orders.' } },
 ];
 
 /**

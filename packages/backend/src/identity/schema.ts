@@ -14,6 +14,7 @@
 import {
   check,
   index,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -135,7 +136,22 @@ export const identityTokens = pgTable(
   }),
 );
 
+export const addresses = pgTable(
+  'addresses',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    // Cross-module FK (→ users.id, ON DELETE CASCADE) lives in reviewed SQL.
+    userId: uuid('user_id').notNull(),
+    fields: jsonb('fields').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userIdx: index('addresses_user_id_idx').on(t.userId),
+  }),
+);
+
 export type UserRow = typeof users.$inferSelect;
 export type SessionFamilyRow = typeof sessionFamilies.$inferSelect;
 export type RefreshTokenRow = typeof refreshTokens.$inferSelect;
 export type IdentityTokenRow = typeof identityTokens.$inferSelect;
+export type AddressRow = typeof addresses.$inferSelect;

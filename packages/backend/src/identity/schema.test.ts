@@ -16,5 +16,6 @@ describe('identity schema (T009)', () => {
     expect(getTableName(schema.sessionFamilies)).toBe('session_families');
     expect(getTableName(schema.refreshTokens)).toBe('refresh_tokens');
     expect(getTableName(schema.identityTokens)).toBe('identity_tokens');
+    expect(getTableName(schema.addresses)).toBe('addresses');
   });
 });

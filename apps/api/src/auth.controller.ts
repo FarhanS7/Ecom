@@ -55,7 +55,7 @@ interface BodySchema<T> {
     | { success: false; error: { issues: Array<{ path: Array<string | number>; code: string }> } };
 }
 
-function parseBody<T>(schema: BodySchema<T>, raw: unknown): T {
+export function parseBody<T>(schema: BodySchema<T>, raw: unknown): T {
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
     // Constraint locations + codes only — messages may embed values.
