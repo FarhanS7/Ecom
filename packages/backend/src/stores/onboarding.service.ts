@@ -321,8 +321,8 @@ export async function updateMember(
     storeId: string;
     actorId: string;
     targetUserId: string;
-    role?: StoreRole;
-    status?: 'active' | 'revoked';
+    role?: StoreRole | undefined;
+    status?: 'active' | 'revoked' | undefined;
     requestId: string;
   },
   sql: Sql = getDb(),

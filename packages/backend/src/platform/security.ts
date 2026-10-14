@@ -37,9 +37,9 @@ function originHost(originOrReferer: string): string | null {
  *   strengthen this; recorded as future work, not silently assumed.
  */
 export function isSameOriginRequest(input: {
-  origin?: string;
-  referer?: string;
-  host?: string;
+  origin?: string | undefined;
+  referer?: string | undefined;
+  host?: string | undefined;
 }): boolean {
   const host = requestHost(input.host);
   if (!host) return true;

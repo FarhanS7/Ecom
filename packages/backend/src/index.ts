@@ -6,6 +6,7 @@ export * from './platform/database.js';
 export * from './platform/health.controller.js';
 export * from './platform/http.js';
 export * from './platform/security.js';
+export * from './platform/audit-port.js';
 export * from './identity/index.js';
 export * from './stores/index.js';
 export * from './catalog/index.js';
