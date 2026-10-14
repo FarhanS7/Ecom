@@ -12,7 +12,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T005: Add validated configuration and health routes](items/T005.md)
 - [x] [T006: Establish API and error conventions](items/T006.md)
 - [ ] Checkpoint after T006: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
-- [ ] [T007: Create the Next.js application shell](items/T007.md)
+- [x] [T007: Create the Next.js application shell](items/T007.md)
 - [ ] [T008: Add initial continuous integration gates](items/T008.md)
 - [ ] Checkpoint after T008: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 

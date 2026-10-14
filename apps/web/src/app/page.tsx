@@ -1,193 +1,74 @@
-// @shopscale/web - Homepage (marketplace)
-// Using inline styles with CSS variables for hover effects
+// @shopscale/web - Marketplace landing page (T007b, server component).
+// Health state is fetched SERVER-side straight from the API origin (no
+// browser round-trip, no secrets: only public /health/* shapes). The browser
+// path is proven separately by <GatewayProbe/>, which calls our own gateway.
 
-import type { CSSProperties } from 'react';
+import { apiBaseUrl } from '@/lib/api';
+import { GatewayProbe } from './gateway-probe';
 
-interface Styles {
-  main: CSSProperties;
-  header: CSSProperties;
-  title: CSSProperties;
-  subtitle: CSSProperties;
-  section: CSSProperties;
-  sectionTitle: CSSProperties;
-  sectionHeader: CSSProperties;
-  viewAll: CSSProperties;
-  categoryList: CSSProperties;
-  categoryLink: CSSProperties;
-  productGrid: CSSProperties;
-  productCard: CSSProperties;
-  productImage: CSSProperties;
-  productInfo: CSSProperties;
-  productName: CSSProperties;
-  productBrand: CSSProperties;
-  productFooter: CSSProperties;
-  productPrice: CSSProperties;
-  addToCartBtn: CSSProperties;
+// Health state must be fresh per request, never frozen at build time.
+export const dynamic = 'force-dynamic';
+
+type HealthState = { status: 'ok' | 'degraded' | 'unreachable'; detail: string };
+
+async function fetchHealth(path: 'health/live' | 'health/ready'): Promise<HealthState> {
+  let base: string;
+  try {
+    base = apiBaseUrl();
+  } catch (err) {
+    return {
+      status: 'unreachable',
+      detail: err instanceof Error ? err.message : 'API origin not configured.',
+    };
+  }
+  try {
+    const res = await fetch(`${base}/${path}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
+    });
+    if (path === 'health/live') {
+      return res.ok
+        ? { status: 'ok', detail: 'API process is alive.' }
+        : { status: 'unreachable', detail: `Liveness answered ${res.status}.` };
+    }
+    if (res.ok) return { status: 'ok', detail: 'All dependencies are ready.' };
+    if (res.status === 503) return { status: 'degraded', detail: 'A dependency is unavailable.' };
+    return { status: 'unreachable', detail: `Readiness answered ${res.status}.` };
+  } catch {
+    return { status: 'unreachable', detail: 'The API did not answer in time.' };
+  }
 }
 
-const styles: Styles = {
-  main: {
-    padding: 'var(--spacing-xl)',
-    maxWidth: '1200px',
-    margin: '0 auto',
-  },
-  header: {
-    marginBottom: 'var(--spacing-xl)',
-  },
-  title: {
-    fontSize: '2.5rem',
-    fontWeight: 700,
-    color: 'var(--color-primary)',
-    margin: 0,
-  },
-  subtitle: {
-    color: 'var(--color-text-muted)',
-    marginTop: 'var(--spacing-sm)',
-    marginBottom: 0,
-  },
-  section: {
-    marginBottom: 'var(--spacing-xl)',
-  },
-  sectionTitle: {
-    fontSize: '1.5rem',
-    marginBottom: 'var(--spacing-md)',
-    marginTop: 0,
-  },
-  sectionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 'var(--spacing-md)',
-  },
-  viewAll: {
-    fontSize: '0.875rem',
-    color: 'var(--color-accent)',
-    textDecoration: 'none',
-  },
-  categoryList: {
-    display: 'flex',
-    gap: 'var(--spacing-md)',
-    flexWrap: 'wrap',
-  },
-  categoryLink: {
-    padding: 'var(--spacing-md) var(--spacing-lg)',
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-md)',
-    color: 'var(--color-text)',
-    textDecoration: 'none',
-    transition: 'all var(--transition-fast)',
-  },
-  productGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-    gap: 'var(--spacing-lg)',
-  },
-  productCard: {
-    background: 'var(--color-surface)',
-    border: '1px solid var(--color-border)',
-    borderRadius: 'var(--radius-lg)',
-    overflow: 'hidden',
-    transition: 'all var(--transition-normal)',
-  },
-  productImage: {
-    aspectRatio: '1',
-    background: 'var(--color-background)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: 'var(--color-text-muted)',
-  },
-  productInfo: {
-    padding: 'var(--spacing-md)',
-  },
-  productName: {
-    fontSize: '1rem',
-    fontWeight: 600,
-    margin: '0 0 var(--spacing-xs) 0',
-  },
-  productBrand: {
-    color: 'var(--color-text-muted)',
-    fontSize: '0.875rem',
-    margin: '0 0 var(--spacing-sm) 0',
-  },
-  productFooter: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  productPrice: {
-    fontSize: '1.25rem',
-    fontWeight: 700,
-    color: 'var(--color-primary)',
-  },
-  addToCartBtn: {
-    padding: 'var(--spacing-xs) var(--spacing-md)',
-    background: 'var(--color-primary)',
-    color: 'white',
-    border: 'none',
-    borderRadius: 'var(--radius-sm)',
-    fontSize: '0.875rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'background-color var(--transition-fast)',
-  },
-};
+export default async function HomePage() {
+  const [live, ready] = await Promise.all([fetchHealth('health/live'), fetchHealth('health/ready')]);
 
-export default function HomePage() {
   return (
-    <main style={styles.main}>
-      <header style={styles.header}>
-        <h1 style={styles.title}>ShopScale Marketplace</h1>
-        <p style={styles.subtitle}>
-          Discover products from independent sellers
-        </p>
-      </header>
+    <section aria-labelledby="page-title">
+      <h1 id="page-title">ShopScale Marketplace</h1>
+      <p>Discover products from independent sellers.</p>
 
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Featured Categories</h2>
-        <div style={styles.categoryList}>
-          {['Electronics', 'Clothing', 'Home & Garden', 'Books', 'Sports', 'Beauty'].map((cat) => (
-            <a
-              key={cat}
-              href={`/search?category=${encodeURIComponent(cat.toLowerCase())}`}
-              style={styles.categoryLink}
-            >
-              {cat}
-            </a>
-          ))}
+      <h2>Platform status</h2>
+      <dl>
+        <div>
+          <dt>API liveness</dt>
+          <dd data-testid="api-liveness">
+            {live.status} — {live.detail}
+          </dd>
         </div>
-      </section>
+        <div>
+          <dt>API readiness</dt>
+          <dd data-testid="api-readiness">
+            {ready.status} — {ready.detail}
+          </dd>
+        </div>
+      </dl>
 
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Latest Products</h2>
-          <a href="/products" style={styles.viewAll}>View all →</a>
-        </div>
-        <div style={styles.productGrid}>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <article key={i} style={styles.productCard}>
-              <div style={styles.productImage}>
-                No image
-              </div>
-              <div style={styles.productInfo}>
-                <h3 style={styles.productName}>Product {i + 1}</h3>
-                <p style={styles.productBrand}>Sample Brand</p>
-                <div style={styles.productFooter}>
-                  <span style={styles.productPrice}>
-                    ${(Math.random() * 200 + 10).toFixed(2)}
-                  </span>
-                  <button style={styles.addToCartBtn}>
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      
-    </main>
+      <h2>Same-origin gateway</h2>
+      <p>
+        Browsers call <code>/api/…</code> on this origin; the server forwards
+        only allowlisted paths to the API. Live probe:
+      </p>
+      <GatewayProbe />
+    </section>
   );
 }
