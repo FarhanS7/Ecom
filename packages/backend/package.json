@@ -1,0 +1,51 @@
+{
+  "name": "@shopscale/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./platform": "./dist/platform/index.js",
+    "./identity": "./dist/identity/index.js",
+    "./stores": "./dist/stores/index.js",
+    "./catalog": "./dist/catalog/index.js",
+    "./inventory": "./dist/inventory/index.js",
+    "./commerce": "./dist/commerce/index.js",
+    "./payments": "./dist/payments/index.js",
+    "./search": "./dist/search/index.js",
+    "./notifications": "./dist/notifications/index.js",
+    "./reporting": "./dist/reporting/index.js",
+    "./engagement": "./dist/engagement/index.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:unit": "vitest run --reporter=verbose",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@shopscale/contracts": "workspace:*",
+    "@shopscale/config": "workspace:*",
+    "drizzle-orm": "^0.30.0",
+    "postgres": "^3.4.0",
+    "zod": "^3.22.0",
+    "@casl/ability": "^6.7.0",
+    "argon2": "^0.31.0",
+    "jose": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.4.0",
+    "drizzle-kit": "^0.20.0",
+    "tsx": "^4.7.0"
+  }
+}

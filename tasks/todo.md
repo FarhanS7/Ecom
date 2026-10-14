@@ -5,7 +5,7 @@ All items are not started. This is the sole implementation status checklist; pha
 ## 0. Foundation
 
 - [x] [T001: Review scope and proposed decisions](items/T001.md)
-- [ ] [T002: Establish the TypeScript workspace](items/T002.md)
+- [x] [T002: Establish the TypeScript workspace](items/T002.md)
 - [ ] [T003: Create the database migration harness](items/T003.md)
 - [ ] Checkpoint after T003: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T004: Define the minimal Docker profile](items/T004.md)

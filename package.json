@@ -1,0 +1,37 @@
+{
+  "name": "shopscale",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ShopScale multi-vendor e-commerce marketplace — portfolio demo",
+  "scripts": {
+    "install:all": "pnpm install --recursive",
+    "build": "pnpm -r --filter=./apps/** --filter=./packages/** run build",
+    "build:apps": "pnpm -r --filter=./apps/** run build",
+    "build:packages": "pnpm -r --filter=./packages/** run build",
+    "typecheck": "pnpm -r --filter=./apps/** --filter=./packages/** run typecheck",
+    "lint": "pnpm -r --filter=./apps/** --filter=./packages/** run lint",
+    "test": "pnpm -r --filter=./apps/** --filter=./packages/** run test",
+    "test:unit": "pnpm -r --filter=./apps/** --filter=./packages/** run test:unit",
+    "test:integration": "pnpm -r --filter=./apps/** --filter=./packages/** run test:integration",
+    "db:generate": "pnpm --filter=@shopscale/backend run db:generate",
+    "db:migrate": "pnpm --filter=@shopscale/backend run db:migrate",
+    "db:seed": "pnpm --filter=@shopscale/backend run db:seed",
+    "dev:api": "pnpm --filter=@shopscale/api run start:dev",
+    "dev:worker": "pnpm --filter=@shopscale/worker run start:dev",
+    "dev:web": "pnpm --filter=@shopscale/web run dev",
+    "dev:all": "concurrently \"pnpm:dev:api\" \"pnpm:dev:worker\" \"pnpm:dev:web\"",
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "concurrently": "^8.2.2",
+    "husky": "^9.0.11",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.1.0"
+}

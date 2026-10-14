@@ -1,0 +1,15 @@
+# ShopScale pnpm Workspace Configuration
+# Excludes skills/ and any downloaded reference projects from the build graph
+
+packages:
+  # Applications
+  - 'apps/*'
+  # Shared packages (domain, contracts, config)
+  - 'packages/*'
+  # Database tooling (migrations, seeds)
+  - 'db/*'
+
+# Explicitly ignore the skills directory and any nested package.json files
+# that belong to downloaded reference projects
+ignored:
+  - 'skills/**'
