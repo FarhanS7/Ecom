@@ -76,9 +76,20 @@ Every workspace package (`apps/*`, `packages/*`, `db/*`) must have:
 - `composite`: false (base only)
 - `references`: [] (apps/packages define their own)
 - Strict mode enabled with all recommended flags
-- `verbatimModuleSyntax`: true (enforces explicit `import type`)
+- `verbatimModuleSyntax`: true (enforces explicit `import type`) — default for
+  all packages **except** `@shopscale/backend` (see below)
 - `isolatedModules`: true (compatible with esbuild/swc)
 - Path aliases: `@shopscale/*` → `packages/*/src`
+
+### Documented exception: `@shopscale/backend` module resolution
+
+`packages/backend` uses `module ESNext` + `moduleResolution Bundler` with
+`verbatimModuleSyntax: false` and an internal `@backend/*` alias. Reason: the
+package has 11 intra-package relative imports (`platform` → `db/client`, …)
+that NodeNext resolution rejects without explicit `.js` extensions on every
+internal edge, while the public contract (exports map, `dist/*.d.ts`) is
+unchanged. Revisit if the package is split or if NodeNext gains ergonomic
+intra-package imports. Recorded T004; history in git.
 
 ### App/Package `tsconfig.json` (extends base)
 ```json
@@ -101,6 +112,10 @@ Every workspace package (`apps/*`, `packages/*`, `db/*`) must have:
 - `references`: explicit dependency graph for typechecking order
 
 ## Linting (ESLint)
+
+Status: **arrives with T008 (CI gates)** — specified here, not yet implemented.
+`pnpm lint` scripts exist as placeholders; running them today fails (no
+ESLint config installed). Do not claim lint gates pass until T008 lands.
 
 - Flat config (`eslint.config.js`) at workspace root
 - Extends: `eslint:recommended`, `plugin:@typescript-eslint/recommended-type-checked`, `prettier`
