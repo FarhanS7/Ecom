@@ -2,6 +2,13 @@
 
 This is a test design, not a passing test report. T018 implements route enumeration; T074 expands it to all routes.
 
+> Measured (T018): `apps/api/tests/integration/permission-matrix.spec.ts`
+> executes the implemented-route subset below (7 personas + anonymous) with
+> honest skips without a database and live runs in CI. Scoped store routes
+> collapse every scope failure to generic 404 (member-without-grant included);
+> platform-admin routes 403; unauthenticated session routes 401. Membership
+> bodies carry `{storeId, role, status}` only — no emails, no user lists.
+
 | Capability | Guest | Customer | Store owner/manager | Catalog editor | Fulfillment staff | Support | Admin |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Browse public catalog | Yes | Yes | Yes | Yes | Yes | Yes | Yes |

@@ -30,7 +30,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T016: Resolve storefront channels and themes](items/T016.md)
 - [x] [T017: Build account and recovery screens](items/T017.md)
 - [ ] Checkpoint after T017: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
-- [ ] [T018: Build the authorization matrix harness](items/T018.md)
+- [x] [T018: Build the authorization matrix harness](items/T018.md)
 - [ ] Checkpoint after T018: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T091: Implement the customer address book](items/T091.md)
 - [ ] Checkpoint after T091: owned address CRUD and browser form verified; historical snapshot regression added with checkout.
