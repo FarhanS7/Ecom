@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { getEnv } from '@shopscale/config';
 import { HealthController } from './health.controller.js';
 import { HealthProbeService } from './health-probe.service.js';
+import { PingController } from './ping.controller.js';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { HealthProbeService } from './health-probe.service.js';
     // ReportingModule,
     // EngagementModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, PingController],
   providers: [HealthProbeService],
 })
 export class AppModule {}

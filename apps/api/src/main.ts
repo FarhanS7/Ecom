@@ -3,11 +3,19 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
-import { ValidationPipe } from '@nestjs/common';
+import {
+  UnprocessableEntityException,
+  ValidationPipe,
+} from '@nestjs/common';
+import { HttpAdapterHost } from '@nestjs/core';
+import type { ValidationError } from 'class-validator';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { getEnv, resetEnvCache } from '@shopscale/config';
 import type { Env } from '@shopscale/config';
 import { AppModule } from './app.module.js';
+import { ProblemFilter } from './problem.filter.js';
+import { PingController } from './ping.controller.js';
+import { requestIdHook } from './request-id.hook.js';
 
 /**
  * Single application creation path for production and tests.
@@ -24,6 +32,12 @@ export async function createApp(): Promise<{ app: NestFastifyApplication; env: E
     new FastifyAdapter({ logger: true }),
   );
 
+  // Versioned business API; health/docs/metrics stay unversioned per
+  // docs/architecture/api-contracts.md.
+  app.setGlobalPrefix('v1', {
+    exclude: ['health/live', 'health/ready', 'metrics', 'docs', 'docs-json'],
+  });
+
   app.enableCors({
     origin: env.COOKIE_DOMAIN ? `https://${env.COOKIE_DOMAIN}` : true,
     credentials: true,
@@ -35,8 +49,31 @@ export async function createApp(): Promise<{ app: NestFastifyApplication; env: E
       forbidNonWhitelisted: true,
       transform: true,
       transformOptions: { enableImplicitConversion: true },
+      // api-contracts.md: validation failures are 422, not 400.
+      errorHttpStatusCode: 422,
+      // Shape violations as constraint data (property + constraint keys);
+      // the problem filter maps them without ever echoing rejected values.
+      exceptionFactory: (validationErrors: ValidationError[] = []) =>
+        new UnprocessableEntityException(
+          validationErrors.map((e) => ({
+            property: e.property,
+            constraints: e.constraints ?? {},
+          })),
+        ),
     }),
   );
+
+  const adapterHost = app.get(HttpAdapterHost);
+  app.useGlobalFilters(new ProblemFilter(adapterHost));
+
+  const fastify = app.getHttpAdapter().getInstance();
+  // getInstance() is adapter-typed as any; the hook module declares only the
+  // structural shapes it uses, so no fastify import leaks into our code.
+  fastify.addHook('onRequest', requestIdHook);
+
+  // Unknown routes flow through Nest's own not-found handling into the
+  // global ProblemFilter (single-handler limit on the Fastify adapter), so
+  // they share the same problem contract — proven by the 404 test.
 
   // Health routes live on HealthController (platform logic in @shopscale/backend).
   app.getHttpAdapter().get('/metrics', () => ({ /* Prometheus metrics arrive in T072 */ }));

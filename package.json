@@ -21,6 +21,7 @@
     "infra:ps": "node scripts/dev-infra.mjs ps",
     "infra:down": "node scripts/dev-infra.mjs down",
     "infra:reset": "node scripts/dev-infra.mjs reset --confirm",
+    "openapi": "node scripts/openapi.mjs",
     "dev:api": "pnpm --filter=@shopscale/api run start:dev",
     "dev:worker": "pnpm --filter=@shopscale/worker run start:dev",
     "dev:web": "pnpm --filter=@shopscale/web run dev",

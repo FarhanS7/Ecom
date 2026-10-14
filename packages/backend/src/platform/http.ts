@@ -120,10 +120,10 @@ export function mapHttpException(input: {
   status: number;
   title: string;
   detail?: unknown;
-  code?: ErrorCode;
+  code?: ErrorCode | undefined;
   requestId: string;
-  instance?: string;
-  errors?: Record<string, string[]>;
+  instance?: string | undefined;
+  errors?: Record<string, string[]> | undefined;
 }): MappedHttpError {
   const status = input.status >= 400 && input.status <= 599 ? input.status : 500;
   if (status >= 500) {
