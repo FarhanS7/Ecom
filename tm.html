@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nitec. — Sequoia Inspiring Musico</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#e6e9e2;
+  --card:#fbfcfa;
+  --ink:#0c0e0c;
+  --mut:#8a8f8a;
+  --lime:#d7f757;
+  --blue:#2f6bd4;
+  --blue-d:#14337d;
+  --red:#e8404b;
+  --r:18px;
+  --sh:0 8px 22px rgba(20,25,20,.07);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+button{font:inherit;border:none;background:none;cursor:pointer}
+svg{display:block}
+body{
+  background:var(--bg);
+  font-family:'Inter','Helvetica Neue',Arial,sans-serif;
+  color:var(--ink);
+  min-height:100vh;
+  padding:16px 36px 30px;
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:882px;margin:0 auto}
+
+/* ============ NAVBAR ============ */
+.nav{
+  display:flex;align-items:center;gap:14px;
+  background:#f1f3ee;border-radius:16px;
+  padding:7px 8px 7px 16px;height:50px;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);
+}
+.logo{display:flex;align-items:center;gap:7px;font-weight:700;font-size:15px;letter-spacing:-.3px;color:var(--ink);text-decoration:none}
+.search{
+  flex:0 0 236px;height:36px;background:#e7eae3;border-radius:999px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 5px 0 14px;
+}
+.search span{font-size:11px;color:var(--mut)}
+.search-btn{width:27px;height:27px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+.search-btn svg{width:13px;height:13px}
+.nav-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.icon-btn{width:35px;height:35px;border-radius:50%;background:#fff;box-shadow:var(--sh);display:grid;place-items:center;color:var(--ink)}
+.icon-btn svg{width:15px;height:15px}
+.icon-btn.heart svg{color:var(--red)}
+.user{display:flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:4px 4px 4px 12px;box-shadow:var(--sh);font-size:11px;font-weight:600}
+.avatar{width:27px;height:27px;border-radius:50%;
+  background:linear-gradient(180deg,#2a1a12 0 30%,#d9a06b 30% 72%,#b8452f 72% 100%);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+
+/* ============ LAYOUT ============ */
+.layout{display:grid;grid-template-columns:1fr 196px;grid-template-areas:"hero side" "row side";gap:14px;margin-top:14px}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);position:relative}
+
+/* ============ HERO ============ */
+.hero{
+  grid-area:hero;border-radius:22px;position:relative;overflow:hidden;
+  background:linear-gradient(115deg,#eef3e9 0%,#e9f0e4 60%,#eef4e8 100%);
+  padding:28px;min-height:336px;
+}
+.badge{display:inline-flex;align-items:center;gap:6px;background:#fff;border-radius:8px;padding:6px 10px;font-size:9px;font-weight:600;color:#6b706b;box-shadow:0 2px 5px rgba(0,0,0,.05)}
+.badge svg{width:9px;height:9px;color:#9aa09a}
+.hero h1{font-size:34px;line-height:1.1;font-weight:600;letter-spacing:-.8px;margin:16px 0 20px;max-width:330px}
+.hero-meta{display:flex;align-items:flex-start;gap:0}
+.num{font-size:30px;font-weight:700;letter-spacing:1px;color:transparent;-webkit-text-stroke:1.4px #bfc4bc}
+@supports not (-webkit-text-stroke:1px black){.num{color:#bfc4bc}}
+.line{width:82px;height:1px;background:#c4c9c1;margin:17px 12px 0 10px;position:relative}
+.line::after{content:"";position:absolute;right:0;top:-3.5px;width:6px;height:6px;border-top:1px solid #c4c9c1;border-right:1px solid #c4c9c1;transform:rotate(45deg)}
+.meta-text h3{font-size:12px;font-weight:600;margin-top:2px}
+.meta-text p{font-size:9.5px;color:var(--mut);line-height:1.55;margin-top:5px;max-width:175px}
+.cta{display:inline-flex;align-items:center;gap:12px;background:var(--lime);border-radius:999px;padding:7px 7px 7px 16px;font-size:11.5px;font-weight:600;margin-top:26px;box-shadow:0 6px 16px rgba(160,200,40,.35)}
+.cta-arrow{width:30px;height:30px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center}
+.cta-arrow svg{width:12px;height:12px}
+.social{position:absolute;left:28px;bottom:22px;display:flex;align-items:center;gap:8px;font-size:9px;color:var(--mut)}
+.social a{width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.08);display:grid;place-items:center;color:#7a7f7a}
+.social svg{width:11px;height:11px}
+
+/* --- headphone CSS art --- */
+.hero-art{position:absolute;right:14px;top:8px;width:330px;height:306px}
+.headphones{position:absolute;left:50%;top:44%;width:210px;height:230px;transform:translate(-50%,-50%) rotate(-14deg)}
+.band{position:absolute;left:20px;top:0;width:170px;height:95px;border:16px solid var(--blue);border-bottom:none;border-radius:100px 100px 0 0;box-shadow:inset 0 3px 5px rgba(255,255,255,.35)}
+.band .pad{position:absolute;left:50%;top:-15px;transform:translateX(-50%) rotate(5deg);width:98px;height:27px;background:linear-gradient(90deg,#1a47a0,#0e2f73);border-radius:14px;box-shadow:0 3px 6px rgba(0,0,40,.3)}
+.slider{position:absolute;width:6px;height:36px;background:linear-gradient(#eee,#9aa0a6);border-radius:3px}
+.s-l{left:24px;top:86px;transform:rotate(10deg)}
+.s-r{right:24px;top:86px;transform:rotate(-10deg)}
+.cup{position:absolute;width:76px;height:98px;border-radius:38px;background:linear-gradient(140deg,#6ea0ee 0%,#2f6bd4 45%,#16368a 100%);box-shadow:inset -8px -10px 16px rgba(0,0,30,.4),inset 6px 6px 10px rgba(255,255,255,.25),0 14px 24px rgba(20,50,140,.25)}
+.cup::after{content:"";position:absolute;inset:9px 12px;border-radius:30px;background:radial-gradient(circle at 62% 38%,#2f6bd4 0%,#122f7b 75%)}
+.c-l{left:-2px;top:116px;transform:rotate(18deg)}
+.c-r{right:0;top:110px;transform:rotate(-14deg)}
+.orb{position:absolute;border-radius:50%}
+.o1{width:15px;height:15px;left:62px;top:56px;background:radial-gradient(circle at 32% 28%,#fff,#b9bdb7 60%,#8d918b)}
+.o2{width:10px;height:10px;left:152px;top:98px;background:radial-gradient(circle at 32% 28%,#6ea0ee,#1d47a8)}
+.o3{width:12px;height:12px;left:272px;top:88px;background:radial-gradient(circle at 32% 28%,#6ea0ee,#1d47a8)}
+.o4{width:8px;height:8px;left:268px;top:238px;background:radial-gradient(circle at 32% 28%,#fff,#b0b4ae)}
+.o5{width:10px;height:10px;left:72px;top:250px;background:radial-gradient(circle at 32% 28%,#3a67c4,#122f7b)}
+.arc{position:absolute;left:50%;bottom:52px;transform:translateX(-50%);width:210px;height:60px;border-bottom:1.5px solid #c9cdc6;border-radius:0 0 110px 110px}
+.code-btn{position:absolute;left:50%;bottom:38px;transform:translateX(-50%);width:35px;height:35px;border-radius:50%;background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.12);display:grid;place-items:center;color:var(--ink)}
+.code-btn svg{width:12px;height:12px}
+
+/* ============ SIDE COLUMN ============ */
+.side{grid-area:side;display:flex;flex-direction:column;gap:14px}
+.colors{padding:14px 16px 16px}
+.colors h4{font-size:11px;font-weight:600;margin-bottom:13px}
+.dots{display:flex;gap:15px}
+.dots i{width:16px;height:16px;border-radius:50%}
+.dots i:nth-child(1){background:radial-gradient(circle at 32% 28%,#8fb4ec,#4a7fd4 60%,#2c5cad)}
+.dots i:nth-child(2){background:radial-gradient(circle at 32% 28%,#ffc37a,#f5921e 60%,#cf7409)}
+.dots i:nth-child(3){background:radial-gradient(circle at 32% 28%,#7fdd92,#2eb84b 60%,#1d9338)}
+.dots i:nth-child(4){background:radial-gradient(circle at 32% 28%,#f79aa0,#e8404b 60%,#c22733)}
+.dots i:nth-child(5){background:radial-gradient(circle at 32% 28%,#9ff0f2,#2cd3d9 60%,#14aab1)}
+
+.arrow-btn{width:31px;height:31px;border-radius:50%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.13);display:grid;place-items:center;color:var(--ink);position:absolute;z-index:3}
+.arrow-btn svg{width:12px;height:12px}
+
+.xbud{height:132px;padding:14px;overflow:hidden}
+.xbud h4{font-size:12px;font-weight:600;line-height:1.4}
+.xbud .arrow-btn{left:14px;bottom:14px}
+.xbud-art{position:absolute;right:2px;bottom:-2px;width:118px;height:104px}
+.palm{position:absolute;right:0;bottom:0;width:52px;height:66px;background:linear-gradient(200deg,#7a4a30,#53301c);border-radius:26px 26px 18px 18px}
+.fing{position:absolute;right:30px;bottom:34px;width:48px;height:19px;background:#6a4026;border-radius:10px;transform:rotate(24deg)}
+.thb{position:absolute;right:40px;bottom:10px;width:42px;height:18px;background:#7a4a30;border-radius:10px;transform:rotate(-16deg)}
+.case{position:absolute;right:24px;bottom:36px;width:54px;height:35px;background:linear-gradient(160deg,#fff,#d8d8d8);border-radius:10px;transform:rotate(-12deg)}
+.case::before{content:"";position:absolute;left:-3px;top:-15px;width:52px;height:16px;background:linear-gradient(#fff,#e2e2e2);border-radius:10px 10px 4px 4px;transform:rotate(-26deg);transform-origin:left bottom}
+.case::after{content:"";position:absolute;left:6px;right:6px;top:5px;height:15px;background:#2a2a2a;border-radius:8px}
+.bud{position:absolute;width:11px;height:15px;background:#fff;border-radius:6px 6px 4px 4px;z-index:2}
+.b1{right:52px;bottom:62px;transform:rotate(-14deg)}
+.b2{right:38px;bottom:60px;transform:rotate(-8deg)}
+
+.vr{flex:1;min-height:250px;overflow:hidden;background:linear-gradient(180deg,#efefef 0%,#e0e0e0 55%,#f8f8f8 100%);padding:14px}
+.vr .arrow-btn{top:12px;right:12px}
+.vr-art{position:absolute;inset:0}
+.hair{position:absolute;left:60px;top:44px;width:94px;height:84px;border-radius:50%;background:radial-gradient(circle at 60% 40%,#4a3626,#1c120c 72%)}
+.head{position:absolute;left:40px;top:60px;width:72px;height:86px;border-radius:46% 54% 50% 50%/55% 55% 45% 45%;background:radial-gradient(circle at 38% 32%,#8a5a3a,#5a3420 72%)}
+.visor{position:absolute;left:16px;top:92px;width:94px;height:40px;border-radius:16px;background:linear-gradient(120deg,#fbfbfb,#c7c7c7);transform:rotate(-6deg)}
+.visor::before{content:"";position:absolute;left:5px;top:6px;width:46px;height:28px;border-radius:12px;background:linear-gradient(120deg,#4a4a4a,#0d0d0d)}
+.strap{position:absolute;left:98px;top:100px;width:62px;height:13px;border-radius:7px;background:#dedede;transform:rotate(-4deg)}
+.pod{position:absolute;left:92px;top:94px;width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#c9c9c9)}
+.neck{position:absolute;left:44px;bottom:-8px;width:98px;height:66px;border-radius:36px 36px 0 0;background:repeating-linear-gradient(90deg,#fff 0 6px,#e4e4e4 6px 8px),linear-gradient(#fff,#d6d6d6)}
+.vr::after{content:"";position:absolute;left:0;right:0;bottom:0;height:88px;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.92))}
+.vr-text{position:absolute;left:14px;right:14px;bottom:12px;z-index:2}
+.vr-text h4{font-size:12px;font-weight:600;line-height:1.35}
+.vr-text p{font-size:8.5px;color:var(--mut);margin-top:4px}
+
+/* ============ BOTTOM ROW ============ */
+.row{grid-area:row;display:grid;grid-template-columns:1.5fr 1fr 2fr;gap:14px;height:132px}
+
+.more{padding:12px 14px}
+.more-head{display:flex;justify-content:space-between;align-items:flex-start}
+.more h4{font-size:12px;font-weight:600}
+.more-head p{font-size:8.5px;color:var(--mut);margin-top:3px}
+.heart-btn{width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.1);display:grid;place-items:center;color:var(--red)}
+.heart-btn svg{width:12px;height:12px}
+.thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.thumb{height:48px;border-radius:12px;background:#eceee8;position:relative;overflow:hidden}
+.cube{position:absolute;left:50%;top:50%;transform:translate(-58%,-42%);width:24px;height:20px;background:#101010}
+.cube::before{content:"";position:absolute;left:1px;top:-7px;width:24px;height:8px;background:#e8404b;transform:skewX(-45deg)}
+.cube::after{content:"";position:absolute;right:-7px;top:-3px;width:8px;height:20px;background:#000;transform:skewY(-45deg)}
+.mh{position:absolute;right:4px;bottom:-8px;width:32px;height:32px;background:#6a4026;border-radius:50% 50% 40% 40%}
+.mc{position:absolute;left:11px;top:12px;width:23px;height:16px;background:linear-gradient(#fff,#d9d9d9);border-radius:5px;transform:rotate(-15deg)}
+.ph{position:absolute;left:50%;top:9px;transform:translateX(-50%);width:26px;height:30px;background:#5a3420;border-radius:50% 50% 45% 45%}
+.ph::before{content:"";position:absolute;left:2px;right:2px;top:-2px;height:11px;background:#241811;border-radius:50% 50% 40% 40%}
+.pg{position:absolute;left:50%;top:20px;transform:translateX(-50%);width:27px;height:9px;background:#f4f4f4;border-radius:5px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25)}
+.pb{position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);width:34px;height:16px;background:#151515;border-radius:10px 10px 0 0}
+
+.downloads{padding:12px 10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+.avatars{display:flex;align-self:center;margin-top:2px}
+.avatars i{width:27px;height:27px;border-radius:50%;border:2px solid #fff}
+.avatars i+i{margin-left:-9px}
+.a1{background:linear-gradient(180deg,#202020 0 32%,#e0ac69 32% 68%,#8a8a8a 68%)}
+.a2{background:linear-gradient(180deg,#4a2a1a 0 32%,#c98850 32% 68%,#b8452f 68%)}
+.a3{background:linear-gradient(180deg,#c9d6d9 0 32%,#f0c08a 32% 68%,#6ac0d9 68%)}
+.dl-circle{width:58px;height:58px;border-radius:50%;background:linear-gradient(180deg,#5b93ea,#2f6bd4);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 14px rgba(47,107,212,.35)}
+.dl-circle strong{font-size:14px;font-weight:700;line-height:1}
+.dl-circle span{font-size:7px;opacity:.85;margin-top:2px}
+.rating{display:flex;align-items:center;gap:4px;font-size:8.5px;color:var(--mut)}
+.rating svg{width:9px;height:9px}
+
+.listening{padding:14px;overflow:hidden}
+.pop-badge{display:inline-flex;align-items:center;gap:4px;background:#f1f2ee;border-radius:6px;padding:4px 8px;font-size:8px;font-weight:600;color:#6b706b}
+.pop-badge svg{width:8px;height:8px;color:#f5921e}
+.listening .arrow-btn{top:12px;right:12px}
+.listening h4{font-size:12px;font-weight:600;line-height:1.35;margin-top:10px;max-width:130px}
+.lp-circles{position:absolute;left:14px;bottom:14px;display:flex}
+.lp-circles i{width:27px;height:27px;border-radius:50%;display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.lp-circles i+i{margin-left:-8px}
+.lp-circles i:nth-child(1){background:#fff;color:#333}
+.lp-circles i:nth-child(2){background:#141414;color:#fff}
+.lp-circles i:nth-child(3){background:#d9c7c7;color:#4a3a3a}
+.lp-circles svg{width:12px;height:12px}
+.lens-art{position:absolute;right:26px;bottom:0;width:122px;height:98px}
+.lens{position:absolute;left:18px;top:8px;width:56px;height:56px;border-radius:50%;border:3px solid #f2f2f2;background:radial-gradient(circle at 35% 30%,#cfe0ff 0%,#7fa8f0 35%,#2f4fc0 70%,#16207a 100%);box-shadow:0 8px 16px rgba(30,60,160,.3)}
+.lens::after{content:"";position:absolute;left:10px;top:7px;width:20px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(-25deg)}
+.f1{position:absolute;left:46px;top:0;width:46px;height:16px;background:linear-gradient(#8a5a3a,#6a4026);border-radius:10px;transform:rotate(38deg)}
+.f2{position:absolute;left:44px;top:46px;width:48px;height:18px;background:linear-gradient(#8a5a3a,#6a4026);border-radius:10px;transform:rotate(-16deg)}
+.plm{position:absolute;right:-4px;top:26px;width:48px;height:48px;background:#6a4026;border-radius:18px}
+.rate-pill{position:absolute;right:10px;bottom:10px;background:#fff;border-radius:8px;padding:3px 6px;font-size:8px;font-weight:600;display:flex;align-items:center;gap:3px;box-shadow:0 3px 8px rgba(0,0,0,.1);z-index:2}
+.rate-pill svg{width:8px;height:8px}
+
+@media (max-width:820px){
+  .layout{grid-template-columns:1fr;grid-template-areas:"hero" "side" "row"}
+  .side{flex-direction:row;flex-wrap:wrap}
+  .side>.card{flex:1 1 180px}
+  .row{grid-template-columns:1fr;height:auto}
+  .row>.card{min-height:132px}
+  .hero-art{display:none}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ================= NAV ================= -->
+  <header class="nav">
+    <a class="logo" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0c0e0c" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5l8 7 8-7v14"/></svg>
+      nitec.
+    </a>
+    <div class="search">
+      <span>Search products...</span>
+      <button class="search-btn" aria-label="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.9-6.2"/><path d="M20 4v4.2h-4.2"/></svg></button>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" aria-label="bag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 8h11l-.9 11.4a1.7 1.7 0 0 1-1.7 1.6H9.1a1.7 1.7 0 0 1-1.7-1.6L6.5 8z"/><path d="M9 10V6.5a3 3 0 0 1 6 0V10"/></svg></button>
+      <button class="icon-btn heart" aria-label="wishlist"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.7S4.8 16 2.9 11.6C1.4 8.2 3.6 4.8 7 4.8c2 0 3.6 1.1 4.4 2.6.8-1.5 2.4-2.6 4.4-2.6 3.4 0 5.6 3.4 4.1 6.8C18.9 16 12 20.7 12 20.7z"/></svg></button>
+      <button class="user"><span>Ryman Alex</span><span class="avatar"></span></button>
+    </div>
+  </header>
+
+  <main class="layout">
+
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Music is Classic</span>
+      <h1>Sequoia Inspiring Musico.</h1>
+
+      <div class="hero-meta">
+        <span class="num">01</span>
+        <span class="line"></span>
+        <div class="meta-text">
+          <h3>Clear Sounds</h3>
+          <p>Making your dream music come true stay with Sequoia Sounds!</p>
+        </div>
+      </div>
+
+      <button class="cta">View All Products
+        <span class="cta-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg></span>
+      </button>
+
+      <div class="social">
+        <span>Follow us on:</span>
+        <a href="#" aria-label="twitter"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 5.8c-.7.3-1.5.6-2.3.7.8-.5 1.4-1.3 1.7-2.2-.8.5-1.6.8-2.5 1A3.9 3.9 0 0 0 12 8.9c0 .3 0 .6.1.9-3.2-.2-6.1-1.7-8-4.1-.3.6-.5 1.3-.5 2 0 1.4.7 2.6 1.7 3.3-.6 0-1.2-.2-1.8-.5v.1c0 1.9 1.3 3.5 3.1 3.8-.3.1-.7.1-1 .1-.2 0-.5 0-.7-.1.5 1.6 1.9 2.7 3.6 2.7A7.9 7.9 0 0 1 2 18.6a11.2 11.2 0 0 0 6.1 1.8c7.3 0 11.3-6 11.3-11.3v-.5c.8-.6 1.5-1.3 2-2z"/></svg></a>
+        <a href="#" aria-label="tiktok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.8A4.8 4.8 0 0 1 15.4 3h-3v12.4a2.8 2.8 0 1 1-2-2.7v-3.1a5.9 5.9 0 1 0 5 5.8V9.7a7.7 7.7 0 0 0 4.6 1.5v-3a4.8 4.8 0 0 1-3.4-2.4z"/></svg></a>
+        <a href="#" aria-label="instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.2" fill="currentColor" stroke="none"/></svg></a>
+        <a href="#" aria-label="linkedin"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5zM3 9.5h4V21H3zM9.5 9.5h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.4c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.9V21h-4z"/></svg></a>
+      </div>
+
+      <!-- headphone illustration -->
+      <div class="hero-art">
+        <span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span><span class="orb o4"></span><span class="orb o5"></span>
+        <div class="headphones">
+          <span class="band"><i class="pad"></i></span>
+          <span class="slider s-l"></span><span class="slider s-r"></span>
+          <span class="cup c-l"></span><span class="cup c-r"></span>
+        </div>
+        <span class="arc"></span>
+        <button class="code-btn" aria-label="embed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l-6 6 6 6"/><path d="M15 6l6 6-6 6"/></svg></button>
+      </div>
+    </section>
+
+    <!-- ================= SIDE ================= -->
+    <aside class="side">
+      <section class="card colors">
+        <h4>Popular Colors</h4>
+        <div class="dots"><i></i><i></i><i></i><i></i><i></i></div>
+      </section>
+
+      <section class="card xbud">
+        <h4>New Gen<br>X-Bud</h4>
+        <button class="arrow-btn" aria-label="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg></button>
+        <div class="xbud-art">
+          <span class="palm"></span><span class="fing"></span><span class="thb"></span>
+          <span class="case"></span><span class="bud b1"></span><span class="bud b2"></span>
+        </div>
+      </section>
+
+      <section class="card vr">
+        <button class="arrow-btn" aria-label="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg></button>
+        <div class="vr-art">
+          <span class="hair"></span><span class="head"></span>
+          <span class="strap"></span><span class="visor"></span><span class="pod"></span>
+          <span class="neck"></span>
+        </div>
+        <div class="vr-text">
+          <h4>Light Grey Surface Headphone</h4>
+          <p>Boosted with bass</p>
+        </div>
+      </section>
+    </aside>
+
+    <!-- ================= BOTTOM ROW ================= -->
+    <section class="row">
+      <article class="card more">
+        <div class="more-head">
+          <div><h4>More Products</h4><p>460 plus items.</p></div>
+          <button class="heart-btn" aria-label="like"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.7S4.8 16 2.9 11.6C1.4 8.2 3.6 4.8 7 4.8c2 0 3.6 1.1 4.4 2.6.8-1.5 2.4-2.6 4.4-2.6 3.4 0 5.6 3.4 4.1 6.8C18.9 16 12 20.7 12 20.7z"/></svg></button>
+        </div>
+        <div class="thumbs">
+          <span class="thumb"><i class="cube"></i></span>
+          <span class="thumb"><i class="mc"></i><i class="mh"></i></span>
+          <span class="thumb"><i class="pb"></i><i class="ph"></i><i class="pg"></i></span>
+        </div>
+      </article>
+
+      <article class="card downloads">
+        <div class="avatars"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+        <div class="dl-circle"><strong>5m+</strong><span>Downloads</span></div>
+        <p class="rating"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.5-6.1 3.5 1.4-6.8L2.2 9.1l6.9-.8z" fill="#f5c518"/></svg>4.6 reciews</p>
+      </article>
+
+      <article class="card listening">
+        <span class="pop-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 20.7S4.8 16 2.9 11.6C1.4 8.2 3.6 4.8 7 4.8c2 0 3.6 1.1 4.4 2.6.8-1.5 2.4-2.6 4.4-2.6 3.4 0 5.6 3.4 4.1 6.8C18.9 16 12 20.7 12 20.7z"/></svg>Popular</span>
+        <button class="arrow-btn" aria-label="open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg></button>
+        <h4>Listening Has<br>Been Released</h4>
+        <div class="lp-circles">
+          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/><rect x="17" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/></svg></i>
+          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/><rect x="17" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/></svg></i>
+          <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/><rect x="17" y="14" width="4" height="7" rx="2" fill="currentColor" stroke="none"/></svg></i>
+        </div>
+        <div class="lens-art">
+          <span class="plm"></span><span class="lens"></span><span class="f1"></span><span class="f2"></span>
+        </div>
+        <span class="rate-pill"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8-6.1-3.5-6.1 3.5 1.4-6.8L2.2 9.1l6.9-.8z" fill="#f5c518"/></svg>4.7</span>
+      </article>
+    </section>
+  </main>
+</div>
+</body>
+</html>
