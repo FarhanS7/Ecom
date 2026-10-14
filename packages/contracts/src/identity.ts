@@ -53,6 +53,29 @@ export const logoutResponse = z.object({
 
 export type LogoutResponse = z.infer<typeof logoutResponse>;
 
+/** Password-reset request: email only. The response is ALWAYS generic
+ * (non-enumerating); unknown emails create nothing. */
+export const passwordResetRequest = z.object({
+  email: z.string().email().max(254),
+});
+
+export const passwordResetConfirm = z.object({
+  token: z.string().min(1).max(256),
+  newPassword: z.string().min(8).max(128),
+});
+
+/** Verification confirm: single-use proof from the demo sink (dev) or email (prod). */
+export const verificationConfirm = z.object({
+  token: z.string().min(1).max(256),
+});
+
+/** Generic accepted response for request endpoints (nothing to disclose). */
+export const flowAccepted = z.object({
+  ok: z.literal(true),
+});
+
+export type FlowAccepted = z.infer<typeof flowAccepted>;
+
 /** Cookie issuance contract (ADR-0004). Refresh is path-scoped to /v1/auth
  * so it is never sent to business routes; logout lives under /v1/auth (T011)
  * so it can still clear it. */
