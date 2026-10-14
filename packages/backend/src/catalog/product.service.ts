@@ -191,11 +191,11 @@ const UPDATABLE = {
 } as const;
 
 export interface ProductPatch {
-  title?: string;
-  description?: string;
-  brand?: string | null;
-  categoryId?: string | null;
-  attributes?: Record<string, unknown>;
+  title?: string | undefined;
+  description?: string | undefined;
+  brand?: string | null | undefined;
+  categoryId?: string | null | undefined;
+  attributes?: Record<string, unknown> | undefined;
 }
 
 /**
@@ -310,7 +310,7 @@ export async function updateVariant(
     productId: string;
     variantId: string;
     expectedVersion: number;
-    patch: { priceCents?: number; attributes?: Record<string, unknown>; status?: 'active' | 'inactive' };
+    patch: { priceCents?: number | undefined; attributes?: Record<string, unknown> | undefined; status?: 'active' | 'inactive' | undefined };
   },
   sql: Sql = getDb(),
 ): Promise<VariantState> {
@@ -392,7 +392,12 @@ export async function listVariants(storeId: string, productId: string, sql: Sql 
  * visibility when store_enabled stays true).
  */
 export async function setPublication(
-  input: { storeId: string; productId: string; marketplaceEnabled?: boolean; storeEnabled?: boolean },
+  input: {
+    storeId: string;
+    productId: string;
+    marketplaceEnabled?: boolean | undefined;
+    storeEnabled?: boolean | undefined;
+  },
   sql: Sql = getDb(),
 ): Promise<ProductState> {
   return sql.begin(async (tx) => {

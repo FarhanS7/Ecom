@@ -51,6 +51,15 @@ export const ROUTE_POLICY: readonly RoutePolicy[] = [
   { method: 'GET', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped read; generic 404.' } },
   { method: 'PATCH', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped write; generic 404.' } },
   { method: 'DELETE', path: '/v1/me/addresses/{id}', access: { kind: 'session', note: 'Owner-scoped delete; snapshots (not FKs) for orders.' } },
+  { method: 'GET', path: '/v1/seller/stores/{storeId}/products', access: { kind: 'store', permission: 'catalog:manage' } },
+  { method: 'POST', path: '/v1/seller/stores/{storeId}/products', access: { kind: 'store', permission: 'catalog:manage' } },
+  { method: 'GET', path: '/v1/seller/stores/{storeId}/products/{productId}', access: { kind: 'store', permission: 'catalog:manage' } },
+  { method: 'PATCH', path: '/v1/seller/stores/{storeId}/products/{productId}', access: { kind: 'store', permission: 'catalog:manage', note: 'Optimistic version; stale → 409.' } },
+  { method: 'POST', path: '/v1/seller/stores/{storeId}/products/{productId}/archive', access: { kind: 'store', permission: 'catalog:manage', note: 'Archival preserves rows (RESTRICT).' } },
+  { method: 'PATCH', path: '/v1/seller/stores/{storeId}/products/{productId}/publication', access: { kind: 'store', permission: 'catalog:manage', note: 'Independent channel flags.' } },
+  { method: 'GET', path: '/v1/seller/stores/{storeId}/products/{productId}/variants', access: { kind: 'store', permission: 'catalog:manage' } },
+  { method: 'POST', path: '/v1/seller/stores/{storeId}/products/{productId}/variants', access: { kind: 'store', permission: 'catalog:manage', note: 'Duplicate SKU → 409.' } },
+  { method: 'PATCH', path: '/v1/seller/stores/{storeId}/products/{productId}/variants/{variantId}', access: { kind: 'store', permission: 'catalog:manage', note: 'Version gates on product counter.' } },
 ];
 
 /**

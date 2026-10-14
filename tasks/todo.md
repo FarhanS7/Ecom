@@ -38,7 +38,7 @@ All items are not started. This is the sole implementation status checklist; pha
 ## 2. Catalog and storefront
 
 - [x] [T019: Model products and variants](items/T019.md) (T019a+T019b; docs/reviews/t019-context.md; migration 0006 per sequential numbering, task file's provisional 0004 recorded as drift)
-- [ ] [T020: Implement seller catalog mutations](items/T020.md)
+- [x] [T020: Implement seller catalog mutations](items/T020.md) (T020a+T020b; docs/reviews/t020-context.md; uniform-404 scope rule recorded — earlier 403 draft corrected against T018 matrix convention)
 - [ ] [T021: Implement channel-aware catalog reads](items/T021.md)
 - [ ] Checkpoint after T021: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T022: Add stable keyset pagination](items/T022.md)
