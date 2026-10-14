@@ -105,3 +105,57 @@ export const publicationToggleRequest = z.object({
 });
 
 export type PublicationToggleRequest = z.infer<typeof publicationToggleRequest>;
+
+// --- Channel-aware public reads (T021a) ---------------------------------
+// Trimming of the T002 draft shapes (api/index.ts): `primaryImageUrl`,
+// `images`, and `onHand` are omitted because media (T035) and inventory
+// (T032) tables do not exist yet — shipping URL fields that can never be
+// populated would lie to clients. The list/detail DTO names are channel-
+// specific so the T002 drafts stay untouched until T025 retires them.
+
+export const channelListQuery = z.object({
+  category: z.string().max(80).optional(),
+  minPrice: z.coerce.number().int().nonnegative().optional(),
+  maxPrice: z.coerce.number().int().nonnegative().optional(),
+  sort: z.enum(['newest', 'price_asc', 'price_desc', 'popularity']).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
+export type ChannelListQueryInput = z.infer<typeof channelListQuery>;
+
+export const channelProductSummary = z.object({
+  id: z.string().uuid(),
+  slug: z.string(),
+  title: z.string(),
+  brand: z.string().nullable(),
+  priceCents: z.number().int().nonnegative(),
+  currency: z.string().length(3),
+  ratingCount: z.number().int().nonnegative(),
+});
+
+export type ChannelProductSummaryDto = z.infer<typeof channelProductSummary>;
+
+export const channelListResponse = z.object({
+  items: z.array(channelProductSummary),
+  // Always null until T022 adds keyset cursors; shape is final now.
+  nextCursor: z.string().nullable(),
+});
+
+export type ChannelListResponse = z.infer<typeof channelListResponse>;
+
+export const channelProductDetail = channelProductSummary.extend({
+  description: z.string(),
+  attributes: z.record(z.unknown()),
+  status: z.string(),
+  store: z.object({ slug: z.string(), name: z.string() }),
+  variants: z.array(
+    z.object({
+      id: z.string().uuid(),
+      sku: z.string(),
+      priceCents: z.number().int().nonnegative(),
+      attributes: z.record(z.unknown()),
+    }),
+  ),
+});
+
+export type ChannelProductDetailDto = z.infer<typeof channelProductDetail>;
