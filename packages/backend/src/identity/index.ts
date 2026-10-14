@@ -1,4 +1,6 @@
 // @shopscale/backend/identity - Users, sessions, authentication
+export * from './auth.service.js';
+export * from './schema.js';
 export interface User {
   id: string;
   email: string;

@@ -8,27 +8,9 @@ export const healthReadyResponse = z.object({
   checks: z.record(z.object({ status: z.enum(['ok', 'fail']), detail: z.string().optional() })) 
 });
 
-// Auth
-export const registerRequest = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-  name: z.string().min(1).max(100),
-});
-
-export const loginRequest = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
-
-export const tokenResponse = z.object({
-  accessToken: z.string(),
-  refreshToken: z.string(), // Only returned on login/register; not in cookie response
-  expiresIn: z.number(),
-});
-
-export const refreshRequest = z.object({
-  refreshToken: z.string(),
-});
+// Auth — canonical shapes live in ../identity.ts (T010a). The T002 draft
+// (with `name`, body-carried refresh) is superseded per ADR-0004; do not
+// re-add auth DTOs here.
 
 // Products (public)
 export const productListQuery = z.object({
