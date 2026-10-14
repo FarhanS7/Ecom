@@ -219,6 +219,15 @@ export const sellerInventoryAdjustRequest = z.object({
   reason: z.enum(['restock', 'damage', 'correction', 'return']),
 });
 
+// Seller (stores domain; catalog shapes below stay where they are)
+export const storeMembershipResponse = z.object({
+  storeId: z.string().uuid(),
+  role: z.string().min(1),
+  status: z.enum(['active', 'revoked']),
+});
+
+export type StoreMembershipResponse = z.infer<typeof storeMembershipResponse>;
+
 // Admin
 export const adminSellerApproveRequest = z.object({
   action: z.enum(['approve', 'suspend', 'reject']),

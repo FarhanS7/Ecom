@@ -5,12 +5,14 @@
 //
 // Path note: drizzle-kit resolves `schema`/`out` relative to the WORKING
 // DIRECTORY, not this file. Always run via `pnpm db:migrate|generate` from
-// packages/backend (see its package.json scripts).
+// packages/backend (see its package.json scripts). `schema` is an entry
+// ARRAY (one dependency-free file per module); cross-module FKs live in
+// reviewed SQL because schema files cannot import each other portably.
 
 import type { Config } from 'drizzle-kit';
 
 export default {
-  schema: './src/db/schema.ts',
+  schema: ['./src/db/schema.ts', './src/identity/schema.ts', './src/stores/schema.ts'],
   out: '../../db/migrations',
   dialect: 'postgresql',
   dbCredentials: {

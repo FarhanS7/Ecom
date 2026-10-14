@@ -74,3 +74,17 @@ export async function listActiveMemberships(
   )) as unknown as StoreMembership[];
   return rows;
 }
+
+/** Single membership row (any status) for self-reads and admin views. */
+export async function getMembership(
+  input: { storeId: string; userId: string },
+  sql: Sql = getDb(),
+): Promise<StoreMembership | null> {
+  const rows = (await sql.unsafe(
+    `SELECT m."store_id" AS "storeId", m."user_id" AS "userId", r."key" AS role, m."status" AS status
+     FROM "store_memberships" m JOIN "store_roles" r ON r."id" = m."role_id"
+     WHERE m."store_id" = $1 AND m."user_id" = $2;`,
+    [input.storeId, input.userId],
+  )) as unknown as StoreMembership[];
+  return rows[0] ?? null;
+}

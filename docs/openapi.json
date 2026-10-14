@@ -132,6 +132,26 @@
           }
         }
       }
+    },
+    "/v1/seller/stores/{storeId}/membership": {
+      "get": {
+        "operationId": "StoresController_membership",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "info": {

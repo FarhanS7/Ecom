@@ -1,12 +1,13 @@
 // @shopscale/backend/db/schema - Drizzle schema source of truth.
-// Migration SQL in db/migrations/ is generated from this file, then REVIEWED
+// Migration SQL in db/migrations/ is generated from these files, then REVIEWED
 // by hand before commit. Never run push/sync against shared data.
 //
-// T003 bootstrap: minimal probe table only. Domain tables arrive in their
-// owning tasks (identity in T009 below, stores in T014-T015, catalog in
-// T019, ...). Keeping each migration additive proves the harness
-// (empty DB -> migrate -> migrate again safely) without pre-creating
-// later-module FK targets.
+// T003 bootstrap: minimal probe table only. T009 added identity tables,
+// T014 stores tables — via the drizzle config's schema ENTRY ARRAY (one file
+// per module, see db/drizzle.config.ts). Schema files stay dependency-free:
+// cross-module FKs live in reviewed SQL only, because no single import
+// specifier satisfies both drizzle-kit's CJS loader and real Node ESM
+// (proven by the T014b openapi crash; recorded in stores/schema.ts).
 
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
@@ -25,26 +26,3 @@ export const migrationProbe = pgTable('migration_probe', {
 
 export type MigrationProbe = typeof migrationProbe.$inferSelect;
 export type NewMigrationProbe = typeof migrationProbe.$inferInsert;
-
-// Identity tables (T009): re-exported here so `pnpm db:generate` sees the
-// full schema from this single entry point. Extensionless on purpose:
-// drizzle-kit's CJS loader cannot resolve ESM-style `.js` suffixes.
-export {
-  users,
-  platformRoles,
-  permissions,
-  platformRolePermissions,
-  userPlatformRoles,
-  sessionFamilies,
-  refreshTokens,
-  identityTokens,
-} from '../identity/schema';
-
-// Stores tables (T014): same entry-point pattern.
-export {
-  businesses,
-  stores,
-  storeRoles,
-  storeRolePermissions,
-  storeMemberships,
-} from '../stores/schema';

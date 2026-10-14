@@ -1,7 +1,14 @@
 // @shopscale/backend/stores/schema - Drizzle source of truth, stores tables.
 // Reviewed SQL in db/migrations/0002-stores.sql is canonical (CHECKS, seeds,
-// deletion policy). Invitations/themes/content arrive in T015/T016 and are
-// absent here by design.
+// deletion policy, and ALL cross-module FKs). Invitations/themes/content
+// arrive in T015/T016 and are absent here by design.
+//
+// Cross-module references are deliberately NOT expressed here: drizzle-kit
+// 0.20 loads schema through a CJS loader that cannot resolve ESM-style `.js`
+// suffixes, while real Node ESM requires them — no single specifier satisfies
+// both. Rule (also in db/schema.ts): schema files stay dependency-free;
+// cross-module FKs live in reviewed SQL only. The generate-diff still covers
+// tables, columns, uniques, indexes, PKs, and same-module FKs.
 
 import {
   check,
@@ -14,18 +21,13 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-// Stores depends on identity conceptually; SQL owns the real cross-module
-// constraints, drizzle only needs the shapes for FK typing. Extensionless:
-// drizzle-kit's CJS loader cannot resolve ESM-style `.js` suffixes.
-import { permissions, users } from '../identity/schema';
 
 export const businesses = pgTable(
   'businesses',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    ownerUserId: uuid('owner_user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
+    // Cross-module FK (→ users.id, ON DELETE RESTRICT) lives in reviewed SQL.
+    ownerUserId: uuid('owner_user_id').notNull(),
     status: text('status').notNull().default('active'),
     commissionBps: integer('commission_bps').notNull().default(500),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -40,6 +42,8 @@ export const stores = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     // UNIQUE enforces D-007 (one store per business) at the boundary.
+    // Cross-module FK (→ businesses.id, ON DELETE RESTRICT) is same-module
+    // here and IS expressed; the users-side FKs below live in reviewed SQL.
     businessId: uuid('business_id')
       .notNull()
       .unique()
@@ -65,9 +69,8 @@ export const storeRolePermissions = pgTable(
     roleId: uuid('role_id')
       .notNull()
       .references(() => storeRoles.id, { onDelete: 'cascade' }),
-    permissionId: uuid('permission_id')
-      .notNull()
-      .references(() => permissions.id, { onDelete: 'cascade' }),
+    // Cross-module FK (→ permissions.id, ON DELETE CASCADE) in reviewed SQL.
+    permissionId: uuid('permission_id').notNull(),
   },
   (t) => ({
     pk: primaryKey({ columns: [t.roleId, t.permissionId] }),
@@ -80,9 +83,8 @@ export const storeMemberships = pgTable(
     storeId: uuid('store_id')
       .notNull()
       .references(() => stores.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    // Cross-module FK (→ users.id, ON DELETE CASCADE) in reviewed SQL.
+    userId: uuid('user_id').notNull(),
     roleId: uuid('role_id')
       .notNull()
       .references(() => storeRoles.id, { onDelete: 'restrict' }),

@@ -6,6 +6,7 @@ import { HealthController } from './health.controller.js';
 import { HealthProbeService } from './health-probe.service.js';
 import { PingController } from './ping.controller.js';
 import { AuthController } from './auth.controller.js';
+import { StoresController } from './stores.controller.js';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { AuthController } from './auth.controller.js';
     // ReportingModule,
     // EngagementModule,
   ],
-  controllers: [HealthController, PingController, AuthController],
+  controllers: [HealthController, PingController, AuthController, StoresController],
   providers: [HealthProbeService],
 })
 export class AppModule {}

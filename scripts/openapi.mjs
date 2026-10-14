@@ -60,7 +60,7 @@ try {
   const failures = [];
   if (document.info?.title !== 'ShopScale API') failures.push('info.title');
   if (document.info?.version !== '1.0') failures.push('info.version');
-  for (const p of ['/health/live', '/health/ready', '/v1/ping', '/v1/auth/register', '/v1/auth/login', '/v1/auth/refresh', '/v1/auth/logout', '/v1/auth/me']) {
+  for (const p of ['/health/live', '/health/ready', '/v1/ping', '/v1/auth/register', '/v1/auth/login', '/v1/auth/refresh', '/v1/auth/logout', '/v1/auth/me', '/v1/auth/password-reset/request', '/v1/auth/password-reset/confirm', '/v1/auth/verify-email/request', '/v1/auth/verify-email/confirm', '/v1/seller/stores/{storeId}/membership']) {
     if (!document.paths?.[p]) failures.push(`paths[${p}]`);
   }
   if (failures.length > 0) {

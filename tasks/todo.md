@@ -24,8 +24,8 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] Checkpoint after T011: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (T009–T011 contexts; failure cases: duplicate-registration collapse, refresh race revocation, generic-401 indistinguishability).
 - [x] [T012: Implement account recovery and verification](items/T012.md)
 - [x] [T013: Add authentication throttling and browser protections](items/T013.md)
-- [ ] [T014: Implement scoped store memberships](items/T014.md)
-- [ ] Checkpoint after T014: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
+- [x] [T014: Implement scoped store memberships](items/T014.md)
+- [x] Checkpoint after T014: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (T012–T014 contexts; failure cases: replay/supersede, threshold/cooldown, cross-store denial, stale-membership retry).
 - [ ] [T015: Implement seller applications and invitations](items/T015.md)
 - [ ] [T016: Resolve storefront channels and themes](items/T016.md)
 - [ ] [T017: Build account and recovery screens](items/T017.md)
