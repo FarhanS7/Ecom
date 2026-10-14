@@ -5,6 +5,7 @@ import { getEnv } from '@shopscale/config';
 import { HealthController } from './health.controller.js';
 import { HealthProbeService } from './health-probe.service.js';
 import { PingController } from './ping.controller.js';
+import { AuthController } from './auth.controller.js';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { PingController } from './ping.controller.js';
     // ReportingModule,
     // EngagementModule,
   ],
-  controllers: [HealthController, PingController],
+  controllers: [HealthController, PingController, AuthController],
   providers: [HealthProbeService],
 })
 export class AppModule {}
