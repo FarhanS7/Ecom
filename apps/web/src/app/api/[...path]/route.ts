@@ -38,7 +38,11 @@ function gatewayProblem(
   );
 }
 
-async function proxy(req: NextRequest, params: { path: string[] }, method: 'GET' | 'POST'): Promise<NextResponse> {
+async function proxy(
+  req: NextRequest,
+  params: { path: string[] },
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+): Promise<NextResponse> {
   const requestId = resolveOutgoingRequestId(req.headers.get('x-request-id'));
   const instance = `/api/${(params.path ?? []).join('/')}`;
 
@@ -75,16 +79,18 @@ async function proxy(req: NextRequest, params: { path: string[] }, method: 'GET'
   const cookies = filterSessionCookies(req.headers.get('cookie'));
   if (cookies) headers['cookie'] = cookies;
   // Body is buffered as text first: no duplex streaming semantics, and the
-  // content type is re-declared explicitly (never trust-blended).
+  // content type is re-declared explicitly (never trust-blended). GET and
+  // DELETE never carry a body (T091b).
+  const sendsBody = method === 'POST' || method === 'PATCH';
   const incomingContentType = req.headers.get('content-type');
-  if (method === 'POST' && incomingContentType) headers['content-type'] = incomingContentType;
+  if (sendsBody && incomingContentType) headers['content-type'] = incomingContentType;
 
   let upstream: Response;
   try {
     upstream = await fetch(`${base}/${target.path}${method === 'GET' ? req.nextUrl.search : ''}`, {
       method,
       headers,
-      ...(method === 'POST' ? { body: await req.text() } : {}),
+      ...(sendsBody ? { body: await req.text() } : {}),
       signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
     });
   } catch {
@@ -120,4 +126,18 @@ export async function POST(
   { params }: { params: { path: string[] } },
 ): Promise<NextResponse> {
   return proxy(req, params, 'POST');
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { path: string[] } },
+): Promise<NextResponse> {
+  return proxy(req, params, 'PATCH');
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { path: string[] } },
+): Promise<NextResponse> {
+  return proxy(req, params, 'DELETE');
 }

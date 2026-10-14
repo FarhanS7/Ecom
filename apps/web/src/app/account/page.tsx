@@ -1,4 +1,5 @@
 import { SessionPanel } from '@/features/auth/session-panel';
+import { AddressesSection } from '@/features/account/addresses';
 import { currentSessionEmail } from '@/lib/session-server';
 
 export const dynamic = 'force-dynamic';
@@ -9,6 +10,7 @@ export default async function AccountPage() {
     <section aria-labelledby="account-title">
       <h1 id="account-title">Your account</h1>
       <SessionPanel initialEmail={email} />
+      <AddressesSection />
     </section>
   );
 }

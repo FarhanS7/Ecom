@@ -7,11 +7,11 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T001: Review scope and proposed decisions](items/T001.md)
 - [x] [T002: Establish the TypeScript workspace](items/T002.md)
 - [x] [T003: Create the database migration harness](items/T003.md)
-- [ ] Checkpoint after T003: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
+- [x] Checkpoint after T003: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (docs/reviews/t003-context.md; live Docker migration run pending bench host — declared in milestone-0-context.md).
 - [x] [T004: Define the minimal Docker profile](items/T004.md)
 - [x] [T005: Add validated configuration and health routes](items/T005.md)
 - [x] [T006: Establish API and error conventions](items/T006.md)
-- [ ] Checkpoint after T006: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
+- [x] Checkpoint after T006: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (docs/reviews/t006-context.md; backend 9/9, api 10/10 at commit).
 - [x] [T007: Create the Next.js application shell](items/T007.md)
 - [x] [T008: Add initial continuous integration gates](items/T008.md)
 - [x] Checkpoint after T008: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (see docs/reviews/milestone-0-context.md).
@@ -29,11 +29,11 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T015: Implement seller applications and invitations](items/T015.md)
 - [x] [T016: Resolve storefront channels and themes](items/T016.md)
 - [x] [T017: Build account and recovery screens](items/T017.md)
-- [ ] Checkpoint after T017: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
+- [x] Checkpoint after T017: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (docs/reviews/t017-context.md; failure cases: generic-401 indistinguishability, zero-redirect loop-freedom, storage grep clean).
 - [x] [T018: Build the authorization matrix harness](items/T018.md)
-- [ ] Checkpoint after T018: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
-- [ ] [T091: Implement the customer address book](items/T091.md)
-- [ ] Checkpoint after T091: owned address CRUD and browser form verified; historical snapshot regression added with checkout.
+- [x] Checkpoint after T018: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (docs/reviews/t018-context.md; gate caught live openapi drift during T091a).
+- [x] [T091: Implement the customer address book](items/T091.md) (T091a+T091b; docs/reviews/t091-context.md)
+- [ ] Checkpoint after T091: owned address CRUD and browser form verified (prod loopback: all 5 verbs through gateway prefix → API 401 auth guard; UI on /account; e2e written, not run — browsers absent); historical snapshot regression **deferred by design to checkout work** (T046+) per T091b risk note — leave unchecked until then.
 
 ## 2. Catalog and storefront
 

@@ -28,6 +28,14 @@ export const ALLOWED_GATEWAY_PATHS = [
 
 export type AllowedGatewayPath = (typeof ALLOWED_GATEWAY_PATHS)[number];
 
+/**
+ * Prefix patterns for per-ID routes (T091b): exact paths stay literal, while
+ * `<prefix>/{single-segment}` proxies e.g. `v1/me/addresses/{id}`. Depth is
+ * capped at one extra segment and every segment keeps the strict character
+ * rule, so this cannot smuggle traversal or absolute URLs.
+ */
+export const ALLOWED_GATEWAY_PREFIXES = ['v1/me/addresses'] as const;
+
 /** Server-only API origin. Names the variable on failure, never its value. */
 export function apiBaseUrl(): string {
   const value = process.env['API_BASE_URL'];
@@ -48,7 +56,7 @@ const SEGMENT_PATTERN = /^[A-Za-z0-9._~-]+$/;
  */
 export function resolveGatewayTarget(
   segments: string[],
-): { ok: true; path: AllowedGatewayPath } | { ok: false; reason: string } {
+): { ok: true; path: string } | { ok: false; reason: string } {
   if (segments.length === 0) return { ok: false, reason: 'empty path' };
   const decoded: string[] = [];
   for (const seg of segments) {
@@ -64,10 +72,15 @@ export function resolveGatewayTarget(
   }
   const joined = decoded.join('/');
   if (joined.includes('://')) return { ok: false, reason: 'absolute URL' };
-  if (!(ALLOWED_GATEWAY_PATHS as readonly string[]).includes(joined)) {
-    return { ok: false, reason: 'not allowlisted' };
+  if ((ALLOWED_GATEWAY_PATHS as readonly string[]).includes(joined)) {
+    return { ok: true, path: joined };
   }
-  return { ok: true, path: joined as AllowedGatewayPath };
+  for (const prefix of ALLOWED_GATEWAY_PREFIXES) {
+    if (joined === prefix || (joined.startsWith(`${prefix}/`) && decoded.length === prefix.split('/').length + 1)) {
+      return { ok: true, path: joined };
+    }
+  }
+  return { ok: false, reason: 'not allowlisted' };
 }
 
 /** Resolve or mint the request ID to forward upstream. */

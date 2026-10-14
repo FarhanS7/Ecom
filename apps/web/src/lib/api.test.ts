@@ -11,6 +11,18 @@ describe('gateway allowlist (T017a)', () => {
     expect(resolveGatewayTarget(['v1', 'admin', 'stores'])).toEqual({ ok: false, reason: 'not allowlisted' });
     expect(resolveGatewayTarget(['https:', 'evil.example'])).toEqual({ ok: false, reason: 'illegal segment' });
   });
+
+  it('proxies one-level per-ID children of prefix patterns (T091b)', () => {
+    expect(resolveGatewayTarget(['v1', 'me', 'addresses', 'abc-123'])).toEqual({
+      ok: true,
+      path: 'v1/me/addresses/abc-123',
+    });
+    expect(resolveGatewayTarget(['v1', 'me', 'addresses', 'a', 'b'])).toEqual({
+      ok: false,
+      reason: 'not allowlisted',
+    });
+    expect(resolveGatewayTarget(['v1', 'me', 'addresses', '..'])).toEqual({ ok: false, reason: 'traversal' });
+  });
 });
 
 describe('session cookie filtering (T017a)', () => {

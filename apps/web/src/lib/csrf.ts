@@ -21,13 +21,23 @@ export async function csrfFetch(
   body: unknown,
   fetcher: typeof fetch = fetch,
 ): Promise<Response> {
+  return gatewayRequest(path, { method: 'POST', body }, fetcher);
+}
+
+/** Same-origin gateway requests for any verb (T091b addresses UI). */
+export async function gatewayRequest(
+  path: string,
+  init: { method: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown },
+  fetcher: typeof fetch = fetch,
+): Promise<Response> {
   if (!isSameOriginPath(path)) {
     throw new Error(`Refused cross-origin client target (${path}).`);
   }
+  const body = init.body === undefined ? undefined : JSON.stringify(init.body);
   return fetcher(path, {
-    method: 'POST',
+    method: init.method,
     credentials: 'same-origin',
     headers: { accept: 'application/json', 'content-type': 'application/json' },
-    body: JSON.stringify(body),
+    ...(body === undefined ? {} : { body }),
   });
 }
