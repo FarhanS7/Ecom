@@ -1,6 +1,7 @@
 // @shopscale/backend/stores - Store memberships, staff, channel resolution
 export * from './schema.js';
 export * from './permissions.js';
+export * from './onboarding.service.js';
 import type { StoreMembership } from './permissions.js';
 
 export interface Store {

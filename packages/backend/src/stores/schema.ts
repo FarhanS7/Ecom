@@ -101,3 +101,25 @@ export const storeMemberships = pgTable(
 export type BusinessRow = typeof businesses.$inferSelect;
 export type StoreRow = typeof stores.$inferSelect;
 export type StoreMembershipRow = typeof storeMemberships.$inferSelect;
+
+export const storeInvitations = pgTable(
+  'store_invitations',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    storeId: uuid('store_id')
+      .notNull()
+      .references(() => stores.id, { onDelete: 'cascade' }),
+    emailNormalized: text('email_normalized').notNull(),
+    // Cross-module FK (→ store_roles.id, ON DELETE RESTRICT) in reviewed SQL.
+    roleId: uuid('role_id').notNull(),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+    acceptedAt: timestamp('accepted_at', { withTimezone: true, mode: 'date' }),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  },
+  (t) => ({
+    storeIdx: index('store_invitations_store_id_idx').on(t.storeId),
+  }),
+);
+
+export type StoreInvitationRow = typeof storeInvitations.$inferSelect;
