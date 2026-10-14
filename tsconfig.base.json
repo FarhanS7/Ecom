@@ -36,6 +36,8 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "erasableSyntaxOnly": false,
     "moduleDetection": "force"
   },

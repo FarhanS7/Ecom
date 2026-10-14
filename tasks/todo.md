@@ -9,7 +9,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T003: Create the database migration harness](items/T003.md)
 - [ ] Checkpoint after T003: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [x] [T004: Define the minimal Docker profile](items/T004.md)
-- [ ] [T005: Add validated configuration and health routes](items/T005.md)
+- [x] [T005: Add validated configuration and health routes](items/T005.md)
 - [ ] [T006: Establish API and error conventions](items/T006.md)
 - [ ] Checkpoint after T006: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T007: Create the Next.js application shell](items/T007.md)

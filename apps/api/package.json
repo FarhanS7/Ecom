@@ -7,9 +7,9 @@
   "types": "./dist/main.d.ts",
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "vitest run",
+    "test": "vitest run --config vitest.config.ts",
     "test:unit": "vitest run --reporter=verbose",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "start:dev": "nest start --watch",
@@ -18,13 +18,15 @@
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",
+    "@nestjs/config": "^3.2.0",
     "@nestjs/core": "^10.3.0",
     "@nestjs/platform-fastify": "^10.3.0",
-    "@nestjs/config": "^3.2.0",
     "@nestjs/swagger": "^7.3.0",
     "@shopscale/backend": "workspace:*",
     "@shopscale/config": "workspace:*",
     "@shopscale/contracts": "workspace:*",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.0"
   },
