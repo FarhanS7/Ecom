@@ -243,12 +243,6 @@ export const adminSellerApproveRequest = z.object({
   reason: z.string().optional(),
 });
 
-// Error (RFC 7807)
-export const problemDetails = z.object({
-  type: z.string().url(),
-  title: z.string(),
-  status: z.number().int(),
-  detail: z.string().optional(),
-  instance: z.string().optional(),
-  errors: z.record(z.array(z.string())).optional(),
-});
+// Error (RFC 7807) — canonical contract lives in ../errors.ts (T006a).
+// problemDetails is kept as an alias so earlier references do not drift.
+export { problemResponse as problemDetails } from '../errors.js';
