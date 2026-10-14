@@ -39,3 +39,12 @@ export {
   refreshTokens,
   identityTokens,
 } from '../identity/schema';
+
+// Stores tables (T014): same entry-point pattern.
+export {
+  businesses,
+  stores,
+  storeRoles,
+  storeRolePermissions,
+  storeMemberships,
+} from '../stores/schema';
