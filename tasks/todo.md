@@ -37,7 +37,7 @@ All items are not started. This is the sole implementation status checklist; pha
 
 ## 2. Catalog and storefront
 
-- [ ] [T019: Model products and variants](items/T019.md)
+- [x] [T019: Model products and variants](items/T019.md) (T019a+T019b; docs/reviews/t019-context.md; migration 0006 per sequential numbering, task file's provisional 0004 recorded as drift)
 - [ ] [T020: Implement seller catalog mutations](items/T020.md)
 - [ ] [T021: Implement channel-aware catalog reads](items/T021.md)
 - [ ] Checkpoint after T021: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
