@@ -22,9 +22,6 @@
     "verbatimModuleSyntax": false,
     "baseUrl": ".",
     "paths": {
-      "@shopscale/*": [
-        "../../packages/*/src"
-      ],
       "@/*": [
         "./src/*"
       ]

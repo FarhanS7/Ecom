@@ -262,6 +262,26 @@
           }
         }
       }
+    },
+    "/v1/stores/{slug}": {
+      "get": {
+        "operationId": "ChannelController_channel",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "info": {

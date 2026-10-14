@@ -3,8 +3,10 @@
 // radius) must reject; the exact default palette must accept.
 
 import { describe, expect, it } from 'vitest';
+import type { Sql } from 'postgres';
 import { DEFAULT_THEME } from '@shopscale/contracts';
 import { isValidTheme, parseThemeTokens } from './theme.service.js';
+import { getTheme } from './theme.service.js';
 import { extractStoreSlug } from './channel.service.js';
 
 const GOOD = { ...DEFAULT_THEME };
@@ -36,6 +38,24 @@ describe('theme tokens (T016a)', () => {
       expect(isValidTheme(attack)).toBe(false);
       expect(parseThemeTokens(attack)).toBeNull();
     }
+  });
+});
+
+describe('theme fallback (T016b)', () => {
+  // No database: stub the single query getTheme issues.
+  function stubSql(tokens: unknown): Sql {
+    return {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      unsafe: async (): Promise<any> => [{ approved_tokens: tokens }],
+    } as unknown as Sql;
+  }
+
+  it('serves defaults for missing or malicious rows', async () => {
+    expect(await getTheme('store-1', stubSql(null))).toEqual(DEFAULT_THEME);
+    expect(
+      await getTheme('store-1', stubSql({ primary: 'expression(alert(1))', radius: 8 })),
+    ).toEqual(DEFAULT_THEME);
+    expect(await getTheme('store-1', stubSql({ ...DEFAULT_THEME }))).toEqual(DEFAULT_THEME);
   });
 });
 
