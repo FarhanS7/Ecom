@@ -6,10 +6,25 @@
 const REQUEST_ID_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
 
 /**
- * Foundation allowlist: the only upstream paths the gateway proxies.
+ * Foundation + auth allowlist: the only upstream paths the gateway proxies.
  * Extended by owning tasks as endpoints land (never by client input).
+ * Auth paths (T017a) enable browser login/refresh/logout/recovery: cookies
+ * are name-filtered and upstream Origin rules still apply server-side.
  */
-export const ALLOWED_GATEWAY_PATHS = ['health/live', 'health/ready', 'v1/ping'] as const;
+export const ALLOWED_GATEWAY_PATHS = [
+  'health/live',
+  'health/ready',
+  'v1/ping',
+  'v1/auth/register',
+  'v1/auth/login',
+  'v1/auth/refresh',
+  'v1/auth/logout',
+  'v1/auth/me',
+  'v1/auth/password-reset/request',
+  'v1/auth/password-reset/confirm',
+  'v1/auth/verify-email/request',
+  'v1/auth/verify-email/confirm',
+] as const;
 
 export type AllowedGatewayPath = (typeof ALLOWED_GATEWAY_PATHS)[number];
 
@@ -59,6 +74,27 @@ export function resolveGatewayTarget(
 export function resolveOutgoingRequestId(header: string | null): string {
   if (header && REQUEST_ID_PATTERN.test(header)) return header;
   return crypto.randomUUID();
+}
+
+const FORWARDED_COOKIES = ['access_token', 'refresh_token'] as const;
+
+/**
+ * Rebuild a Cookie header from exact-name session matches only (T017a).
+ * Tracking, adversarial, and empty values never ride into the API.
+ */
+export function filterSessionCookies(header: string | null): string | null {
+  if (!header) return null;
+  const kept: string[] = [];
+  for (const part of header.split(';')) {
+    const idx = part.indexOf('=');
+    if (idx < 0) continue;
+    const name = part.slice(0, idx).trim();
+    const value = part.slice(idx + 1).trim();
+    if ((FORWARDED_COOKIES as readonly string[]).includes(name) && value !== '') {
+      kept.push(`${name}=${value}`);
+    }
+  }
+  return kept.length > 0 ? kept.join('; ') : null;
 }
 
 /**

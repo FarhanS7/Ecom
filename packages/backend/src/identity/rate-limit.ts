@@ -109,11 +109,22 @@ export function setLimiterRedisForTests(client: LimitRedis | null): void {
 function realRedis(): Redis {
   if (!sharedRedis) {
     const env = getEnv();
-    sharedRedis = new Redis(env.REDIS_CACHE_URL, {
+    const client = new Redis(env.REDIS_CACHE_URL, {
       maxRetriesPerRequest: 1,
       enableReadyCheck: true,
       lazyConnect: true,
+      // Fail fast while disconnected: queueing would stall fail-closed
+      // mutations behind reconnect backoff (observed 1.4s stalls).
+      enableOfflineQueue: false,
     });
+    // ioredis emits 'error' on every failed reconnect; without a listener
+    // Node treats it as unhandled (crash risk). Command failures still
+    // surface per-call via maxRetriesPerRequest → LimiterUnavailableError.
+    client.on('error', () => {
+      // Intentionally quiet: connection state is observable through command
+      // outcomes, and this process must not log per-retry noise.
+    });
+    sharedRedis = client;
   }
   return sharedRedis;
 }
