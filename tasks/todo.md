@@ -28,7 +28,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] Checkpoint after T014: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (T012–T014 contexts; failure cases: replay/supersede, threshold/cooldown, cross-store denial, stale-membership retry).
 - [x] [T015: Implement seller applications and invitations](items/T015.md)
 - [x] [T016: Resolve storefront channels and themes](items/T016.md)
-- [ ] [T017: Build account and recovery screens](items/T017.md)
+- [x] [T017: Build account and recovery screens](items/T017.md)
 - [ ] Checkpoint after T017: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T018: Build the authorization matrix harness](items/T018.md)
 - [ ] Checkpoint after T018: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
