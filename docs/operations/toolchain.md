@@ -112,9 +112,11 @@ unchanged. Revisit if the package is split. Recorded T004; history in git.
 
 ## Linting (ESLint)
 
-Status: **arrives with T008 (CI gates)** — specified here, not yet implemented.
-`pnpm lint` scripts exist as placeholders; running them today fails (no
-ESLint config installed). Do not claim lint gates pass until T008 lands.
+Status: **arrived with T008** — `pnpm lint` is a required gate (CI `gates` job).
+Covers app workspace code only; `skills/**`, build outputs, and coverage are
+ignored. First run surfaced 91 findings (await-less stubs, unused imports,
+type-aware project coverage); all fixed without weakening rules, except one
+justified inline disable on the postgres.js row generic.
 
 - Flat config (`eslint.config.js`) at workspace root
 - Extends: `eslint:recommended`, `plugin:@typescript-eslint/recommended-type-checked`, `prettier`
@@ -164,11 +166,11 @@ Scope: module/package name (e.g., `platform`, `identity`, `catalog`, `api`, `web
 6. No `console.log`/`debugger` in source
 
 ### Husky Pre-commit
-```bash
-# .husky/pre-commit
-pnpm lint-staged
-```
-`lint-staged` runs ESLint + Prettier on staged files only.
+
+Status: **not activated** — `husky install` is deprecated upstream and no
+`.husky/` hooks are committed. Enforcement lives in CI (`gates` job), not in
+local hooks, until a supported hook story lands. `lint-staged` remains the
+plan for staged-file checks when hooks return.
 
 ## Docker / Local Development
 

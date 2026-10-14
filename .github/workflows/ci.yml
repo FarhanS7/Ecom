@@ -1,0 +1,131 @@
+# ShopScale CI (T008). Linux runners run service containers (PostgreSQL,
+# Redis) that the Windows Docker Desktop host provides locally; the same
+# pnpm scripts execute in both places (see docs/operations/commands.md).
+#
+# Gates: typecheck → lint → build → unit → integration (serialized, with real
+# services) → openapi drift check. E2E (Playwright + full stack) arrives with
+# later milestones; it is NOT faked here.
+
+name: ci
+
+on:
+  push:
+    branches: ['main', 'dev', 'feature/**', 'fix/**']
+  pull_request:
+    branches: ['main', 'dev']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Dummy values ONLY — shape-valid, never real secrets. Nothing here may
+  # echo environment; all app errors are redacted by construction (T003/T005).
+  NODE_ENV: test
+  DATABASE_URL: postgres://shopscale:shopscale@localhost:5432/shopscale
+  REDIS_CACHE_URL: redis://localhost:6379
+  REDIS_JOBS_URL: redis://localhost:6380
+  JWT_ACCESS_SECRET: ci-access-secret-00000000000000000
+  JWT_REFRESH_SECRET: ci-refresh-secret-0000000000000000
+  MOCK_PAYMENTS_SECRET: ci-mock-payments-secret-000000000
+
+jobs:
+  gates:
+    name: lint · typecheck · build · unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Workspace scope guard (downloaded references never run)
+        run: |
+          pnpm list -r --depth -1 --parseable | tee /tmp/workspace.txt
+          if grep -qi 'skills' /tmp/workspace.txt; then
+            echo 'skills/ leaked into the workspace package graph'
+            exit 1
+          fi
+          echo 'workspace scope OK (no skills/ packages)'
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: OpenAPI drift check
+        run: |
+          pnpm openapi
+          git diff --exit-code -- docs/openapi.json || (
+            echo 'docs/openapi.json is stale — run pnpm openapi and commit it (T006b)'
+            exit 1
+          )
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: openapi
+          path: docs/openapi.json
+          retention-days: 7
+
+  integration:
+    name: integration (real services, serialized)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [gates]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: shopscale
+          POSTGRES_PASSWORD: shopscale
+          POSTGRES_DB: shopscale
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U shopscale -d shopscale"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+      redis-cache:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate (real PostgreSQL — no skips)
+        run: pnpm db:migrate
+
+      - name: Fail if any integration test skips for missing infra
+        run: |
+          set -o pipefail
+          pnpm test:integration 2>&1 | tee /tmp/integration.log
+          if grep -q 'SKIP:' /tmp/integration.log; then
+            echo 'integration tests skipped in CI — services must be up (see services: above)'
+            exit 1
+          fi

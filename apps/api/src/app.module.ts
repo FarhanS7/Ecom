@@ -10,11 +10,10 @@ import { PingController } from './ping.controller.js';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validate: (config) => {
+      validate: (_config) => {
         // Fail fast at boot on missing/malformed secrets. getEnv() names
         // fields but never values; nothing secret is logged or returned.
-        const parsed = getEnv();
-        return parsed as unknown as Record<string, string>;
+        return getEnv();
       },
     }),
     // Domain modules will be imported here:

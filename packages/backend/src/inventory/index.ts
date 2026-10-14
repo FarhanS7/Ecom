@@ -35,10 +35,10 @@ export interface InventoryPorts {
 }
 
 export const inventoryPorts: InventoryPorts = {
-  async getAvailability() { return new Map(); },
-  async reserve() { throw new Error('Not implemented'); },
-  async confirmReservation() { throw new Error('Not implemented'); },
-  async releaseReservation() { throw new Error('Not implemented'); },
-  async adjustStock() { throw new Error('Not implemented'); },
-  async getMovements() { return []; },
+  getAvailability() { return Promise.resolve(new Map()); },
+  reserve() { return Promise.reject(new Error('Not implemented')); },
+  confirmReservation() { return Promise.reject(new Error('Not implemented')); },
+  releaseReservation() { return Promise.reject(new Error('Not implemented')); },
+  adjustStock() { return Promise.reject(new Error('Not implemented')); },
+  getMovements() { return Promise.resolve([]); },
 };

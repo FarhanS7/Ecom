@@ -39,7 +39,9 @@ function seededRandom(seed: number): () => number {
 
 async function main() {
   const { size, seed } = parseArgs();
-  const random = seededRandom(seed);
+  // Reserved for deterministic generation in the full seeder (T077); the
+  // T003 scaffold only probes the connection so far.
+  const _random = seededRandom(seed);
   const sql = getDb();
 
   console.log(`Seeding database: size=${size}, seed=${seed}`);

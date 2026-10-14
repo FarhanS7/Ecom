@@ -14,7 +14,6 @@ import { getEnv, resetEnvCache } from '@shopscale/config';
 import type { Env } from '@shopscale/config';
 import { AppModule } from './app.module.js';
 import { ProblemFilter } from './problem.filter.js';
-import { PingController } from './ping.controller.js';
 import { requestIdHook } from './request-id.hook.js';
 
 /**

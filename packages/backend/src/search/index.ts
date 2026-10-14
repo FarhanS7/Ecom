@@ -26,8 +26,8 @@ export interface SearchPorts {
 }
 
 export const searchPorts: SearchPorts = {
-  async search() { return { items: [], facets: {}, nextCursor: null }; },
-  async autocomplete() { return []; },
-  async reindexFull() { throw new Error('Not implemented'); },
-  async reindexProduct() { throw new Error('Not implemented'); },
+  search() { return Promise.resolve({ items: [], facets: {}, nextCursor: null }); },
+  autocomplete() { return Promise.resolve([]); },
+  reindexFull() { return Promise.reject(new Error('Not implemented')); },
+  reindexProduct() { return Promise.reject(new Error('Not implemented')); },
 };

@@ -27,8 +27,8 @@ export interface PaymentPorts {
 }
 
 export const paymentPorts: PaymentPorts = {
-  async initiatePayment() { throw new Error('Not implemented'); },
-  async handleWebhook() { throw new Error('Not implemented'); },
-  async findPaymentByOrder() { return null; },
-  async reconcileUncertainPayments() { throw new Error('Not implemented'); },
+  initiatePayment() { return Promise.reject(new Error('Not implemented')); },
+  handleWebhook() { return Promise.reject(new Error('Not implemented')); },
+  findPaymentByOrder() { return Promise.resolve(null); },
+  reconcileUncertainPayments() { return Promise.reject(new Error('Not implemented')); },
 };

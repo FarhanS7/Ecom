@@ -14,10 +14,12 @@ Use pnpm scripts as the portable Windows entry point. Optional Make targets wrap
 | pnpm seed --size s --seed 42 | Deterministic seed; early catalog in T028, complete tiers T077 |
 | pnpm seed:verify | Verify counts/FKs/distributions/ledger, T028/T077 |
 | pnpm dev:api / dev:web / dev:worker | Start the selected host process; separate terminals |
-| pnpm lint / typecheck / build | Check only app workspace code, T002/T008 |
-| pnpm test:unit | Backend Jest + frontend Vitest focused unit suites, T008 |
+| pnpm lint / typecheck / build | Check only app workspace code; lint arrived T008 |
+| pnpm test | Unit suites per package (vitest, explicit passWithNoTests where empty), T008 |
+| pnpm test:unit | Focused unit suites per package, T008 |
 | pnpm test:integration | Real service tests, serial by default on this host, T008 onward |
-| pnpm test:e2e | Playwright against isolated seeded application, T008 onward |
+| pnpm test:e2e | Playwright against isolated seeded application (spec exists T007; CI wiring later) |
+| pnpm openapi | Regenerate + validate docs/openapi.json from built dist, T006 |
 | pnpm test:security | Permission matrix + isolation/security regressions, T074 |
 | pnpm loadtest --scenario browse --size l | k6 threshold run with environment manifest, T079 |
 | pnpm bench:queries | Controlled query-plan experiments, T078 |
@@ -28,11 +30,15 @@ Use pnpm scripts as the portable Windows entry point. Optional Make targets wrap
 ## Focused examples after implementation
 
 ```powershell
-pnpm exec jest --runInBand --runTestsByPath tests/integration/checkout.spec.ts
+pnpm --filter @shopscale/backend exec vitest run --config vitest.integration.config.ts tests/integration/checkout.spec.ts
 pnpm exec playwright test tests/e2e/checkout.spec.ts --workers=1
 pnpm exec vitest run apps/web/src/components/ui.test.tsx
 ```
 
-Jest handles backend/integration tests; Vitest handles frontend components. Exclude each other's files. Playwright runs against the configured test server and seed; it must not mutate a production host.
+Vitest runs unit, integration, and frontend component tests (one runner by
+T002–T006 implementation decision; the planning-era Jest split is superseded —
+see ci-evidence.md rationale). Exclude backend/frontend files from each other's
+suites via package configs. Playwright runs against the configured test server
+and seed; it must not mutate a production host.
 
 At T002/T008, add and test all initial package script definitions plus test-runner include/exclude rules. Later task completion requires its command to exist and be documented here. The exact implementation command and output go in evidence, not a retroactive claim that today's plan was executed.

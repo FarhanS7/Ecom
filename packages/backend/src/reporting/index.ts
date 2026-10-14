@@ -28,7 +28,7 @@ export interface ReportingPorts {
 }
 
 export const reportingPorts: ReportingPorts = {
-  async getSalesMetrics() { throw new Error('Not implemented'); },
-  async getSellerMetrics() { throw new Error('Not implemented'); },
-  async getAuditLogs() { return { items: [], nextCursor: null }; },
+  getSalesMetrics() { return Promise.reject(new Error('Not implemented')); },
+  getSellerMetrics() { return Promise.reject(new Error('Not implemented')); },
+  getAuditLogs() { return Promise.resolve({ items: [], nextCursor: null }); },
 };

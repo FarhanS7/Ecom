@@ -1,15 +1,16 @@
 // @shopscale/backend/platform - Platform foundation
 // Configuration, transaction boundary, telemetry bootstrap, AuditWriter port
 
-import { getEnv } from '@shopscale/config';
 import { getDb } from '../db/client.js';
 
 export { getEnv } from '@shopscale/config';
 export { getDb } from '../db/client.js';
 
 export interface Transaction {
-  // Minimal transaction interface for domain ports
-  // Actual implementation uses postgres transaction
+  // Minimal transaction placeholder for domain ports. The brand keeps the
+  // empty-interface lint rule honest until the real postgres transaction type
+  // lands with outbox/worker work (T029); callers must not construct it.
+  readonly _brand?: unique symbol;
 }
 
 export interface UnitOfWork {
@@ -17,11 +18,11 @@ export interface UnitOfWork {
 }
 
 export const unitOfWork: UnitOfWork = {
-  async run<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
-    const client = getDb();
-    // In real implementation, this would use db.begin()
-    // For now, return a mock transaction
-    return callback({} as Transaction);
+  run<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
+    // Real implementation opens db.begin() here (T029). Until then the
+    // placeholder resolves without touching the database.
+    const tx: Transaction = {};
+    return callback(tx);
   },
 };
 
@@ -39,8 +40,9 @@ export interface AuditWriter {
 }
 
 export const auditWriter: AuditWriter = {
-  async write() {
-    // Implementation writes to audit_logs table
+  write() {
+    // Implementation writes to audit_logs table (T062).
+    return Promise.resolve();
   },
 };
 
@@ -63,9 +65,9 @@ export const healthChecks: HealthCheck[] = [
   },
   {
     name: 'redis-cache',
-    async check() {
-      // Redis cache health check
-      return { status: 'ok' };
+    check() {
+      // Redis cache health check (client arrives with cart/caching work).
+      return Promise.resolve({ status: 'ok' as const });
     },
   },
 ];

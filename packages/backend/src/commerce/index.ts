@@ -53,12 +53,12 @@ export interface CommercePorts {
 }
 
 export const commercePorts: CommercePorts = {
-  async createOrder() { throw new Error('Not implemented'); },
-  async findOrderById() { return null; },
-  async findOrdersByUser() { return { items: [], nextCursor: null }; },
-  async findSubordersBySeller() { return { items: [], nextCursor: null }; },
-  async transitionSuborder() { throw new Error('Not implemented'); },
-  async cancelOrder() { throw new Error('Not implemented'); },
-  async requestReturn() { throw new Error('Not implemented'); },
-  async processRefund() { throw new Error('Not implemented'); },
+  createOrder() { return Promise.reject(new Error('Not implemented')); },
+  findOrderById() { return Promise.resolve(null); },
+  findOrdersByUser() { return Promise.resolve({ items: [], nextCursor: null }); },
+  findSubordersBySeller() { return Promise.resolve({ items: [], nextCursor: null }); },
+  transitionSuborder() { return Promise.reject(new Error('Not implemented')); },
+  cancelOrder() { return Promise.reject(new Error('Not implemented')); },
+  requestReturn() { return Promise.reject(new Error('Not implemented')); },
+  processRefund() { return Promise.reject(new Error('Not implemented')); },
 };

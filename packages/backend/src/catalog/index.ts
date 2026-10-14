@@ -48,12 +48,12 @@ export interface CatalogPorts {
 }
 
 export const catalogPorts: CatalogPorts = {
-  async findProductBySlug() { return null; },
-  async findProductById() { return null; },
-  async findProductsByCategory() { return { items: [], nextCursor: null }; },
-  async searchProducts() { return { items: [], nextCursor: null }; },
-  async createProduct() { throw new Error('Not implemented'); },
-  async updateProduct() { throw new Error('Not implemented'); },
-  async publishProduct() { throw new Error('Not implemented'); },
-  async unpublishProduct() { throw new Error('Not implemented'); },
+  findProductBySlug() { return Promise.resolve(null); },
+  findProductById() { return Promise.resolve(null); },
+  findProductsByCategory() { return Promise.resolve({ items: [], nextCursor: null }); },
+  searchProducts() { return Promise.resolve({ items: [], nextCursor: null }); },
+  createProduct() { return Promise.reject(new Error('Not implemented')); },
+  updateProduct() { return Promise.reject(new Error('Not implemented')); },
+  publishProduct() { return Promise.reject(new Error('Not implemented')); },
+  unpublishProduct() { return Promise.reject(new Error('Not implemented')); },
 };

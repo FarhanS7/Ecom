@@ -7,7 +7,6 @@ import { Catch, HttpException } from '@nestjs/common';
 import type { ArgumentsHost, ExceptionFilter } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import {
-  REQUEST_ID_HEADER,
   mapHttpException,
   resolveRequestId,
   validationErrorMap,
@@ -57,7 +56,7 @@ export class ProblemFilter implements ExceptionFilter {
       requestId?: string;
       url?: string;
     }>();
-    const res = ctx.getResponse();
+    const res: unknown = ctx.getResponse();
 
     // Prefer the hook-attached ID; fall back to header resolution so every
     // error carries a requestId even if the hook was bypassed.

@@ -2,6 +2,7 @@
   "name": "shopscale",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "description": "ShopScale multi-vendor e-commerce marketplace — portfolio demo",
   "scripts": {
     "install:all": "pnpm install --recursive",
@@ -9,7 +10,7 @@
     "build:apps": "pnpm -r --filter=./apps/** run build",
     "build:packages": "pnpm -r --filter=./packages/** run build",
     "typecheck": "pnpm -r --filter=./apps/** --filter=./packages/** run typecheck",
-    "lint": "pnpm -r --filter=./apps/** --filter=./packages/** run lint",
+    "lint": "eslint apps packages scripts tests playwright.config.ts eslint.config.js",
     "test": "pnpm -r --filter=./apps/** --filter=./packages/** run test",
     "test:unit": "pnpm -r --filter=./apps/** --filter=./packages/** run test:unit",
     "test:integration": "pnpm -r --filter=./apps/** --filter=./packages/** run test:integration",
@@ -30,10 +31,16 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@eslint/js": "^8.57.0",
     "@types/node": "^20.12.0",
     "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
     "husky": "^9.0.11",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.71.2",
+    "yaml": "^2.9.1"
   },
   "engines": {
     "node": ">=20.11.0",

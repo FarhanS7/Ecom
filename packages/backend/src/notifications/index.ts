@@ -28,8 +28,8 @@ export interface NotificationPorts {
 }
 
 export const notificationPorts: NotificationPorts = {
-  async enqueueEmail() { throw new Error('Not implemented'); },
-  async enqueueSms() { throw new Error('Not implemented'); },
-  async generateInvoice() { throw new Error('Not implemented'); },
-  async processQueue() { throw new Error('Not implemented'); },
+  enqueueEmail() { return Promise.reject(new Error('Not implemented')); },
+  enqueueSms() { return Promise.reject(new Error('Not implemented')); },
+  generateInvoice() { return Promise.reject(new Error('Not implemented')); },
+  processQueue() { return Promise.reject(new Error('Not implemented')); },
 };

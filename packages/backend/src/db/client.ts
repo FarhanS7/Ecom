@@ -37,6 +37,7 @@ export async function closeSql(): Promise<void> {
 
 // Transaction helper
 export async function withTransaction<T>(
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- postgres.js row-type generic; {} is the driver's own default.
   callback: (tx: TransactionSql<{}>) => Promise<T>
 ): Promise<T> {
   const sql = getSql();

@@ -52,11 +52,11 @@ export interface EngagementPorts {
 }
 
 export const engagementPorts: EngagementPorts = {
-  async validateCoupon() { return { valid: false, discountCents: 0 }; },
-  async redeemCoupon() { throw new Error('Not implemented'); },
-  async createReview() { throw new Error('Not implemented'); },
-  async findReviewsByProduct() { return { items: [], nextCursor: null }; },
-  async addToWishlist() { throw new Error('Not implemented'); },
-  async removeFromWishlist() { throw new Error('Not implemented'); },
-  async findWishlist() { return []; },
+  validateCoupon() { return Promise.resolve({ valid: false, discountCents: 0 }); },
+  redeemCoupon() { return Promise.reject(new Error('Not implemented')); },
+  createReview() { return Promise.reject(new Error('Not implemented')); },
+  findReviewsByProduct() { return Promise.resolve({ items: [], nextCursor: null }); },
+  addToWishlist() { return Promise.reject(new Error('Not implemented')); },
+  removeFromWishlist() { return Promise.reject(new Error('Not implemented')); },
+  findWishlist() { return Promise.resolve([]); },
 };

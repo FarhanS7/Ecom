@@ -29,12 +29,12 @@ export interface IdentityPorts {
 }
 
 export const identityPorts: IdentityPorts = {
-  async findUserByEmail() { return null; },
-  async findUserById() { return null; },
-  async createUser() { throw new Error('Not implemented'); },
-  async updateUser() { throw new Error('Not implemented'); },
-  async createSession() { throw new Error('Not implemented'); },
-  async findSessionByRefreshToken() { return null; },
-  async revokeSession() { throw new Error('Not implemented'); },
-  async revokeFamily() { throw new Error('Not implemented'); },
+  findUserByEmail() { return Promise.resolve(null); },
+  findUserById() { return Promise.resolve(null); },
+  createUser() { return Promise.reject(new Error('Not implemented')); },
+  updateUser() { return Promise.reject(new Error('Not implemented')); },
+  createSession() { return Promise.reject(new Error('Not implemented')); },
+  findSessionByRefreshToken() { return Promise.resolve(null); },
+  revokeSession() { return Promise.reject(new Error('Not implemented')); },
+  revokeFamily() { return Promise.reject(new Error('Not implemented')); },
 };

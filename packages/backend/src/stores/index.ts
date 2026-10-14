@@ -31,12 +31,12 @@ export interface StorePorts {
 }
 
 export const storePorts: StorePorts = {
-  async findStoreBySlug() { return null; },
-  async findStoreById() { return null; },
-  async findMembership() { return null; },
-  async createStore() { throw new Error('Not implemented'); },
-  async createMembership() { throw new Error('Not implemented'); },
-  async updateMembership() { throw new Error('Not implemented'); },
+  findStoreBySlug() { return Promise.resolve(null); },
+  findStoreById() { return Promise.resolve(null); },
+  findMembership() { return Promise.resolve(null); },
+  createStore() { return Promise.reject(new Error('Not implemented')); },
+  createMembership() { return Promise.reject(new Error('Not implemented')); },
+  updateMembership() { return Promise.reject(new Error('Not implemented')); },
 };
 
 export type Channel = 'marketplace' | 'store';

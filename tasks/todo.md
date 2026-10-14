@@ -13,8 +13,8 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T006: Establish API and error conventions](items/T006.md)
 - [ ] Checkpoint after T006: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [x] [T007: Create the Next.js application shell](items/T007.md)
-- [ ] [T008: Add initial continuous integration gates](items/T008.md)
-- [ ] Checkpoint after T008: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
+- [x] [T008: Add initial continuous integration gates](items/T008.md)
+- [x] Checkpoint after T008: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded (see docs/reviews/milestone-0-context.md).
 
 ## 1. Identity and stores
 
