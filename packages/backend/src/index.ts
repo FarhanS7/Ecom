@@ -2,6 +2,7 @@
 // Re-export all module public APIs
 
 export * from './platform/index.js';
+export * from './platform/database.js';
 export * from './identity/index.js';
 export * from './stores/index.js';
 export * from './catalog/index.js';

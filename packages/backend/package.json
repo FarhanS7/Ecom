@@ -8,6 +8,7 @@
   "exports": {
     ".": "./dist/index.js",
     "./platform": "./dist/platform/index.js",
+    "./platform/database": "./dist/platform/database.js",
     "./identity": "./dist/identity/index.js",
     "./stores": "./dist/stores/index.js",
     "./catalog": "./dist/catalog/index.js",
@@ -22,13 +23,13 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "lint": "eslint \"src/**/*.ts\"",
-    "test": "vitest run",
-    "test:unit": "vitest run --reporter=verbose",
+    "test": "vitest run --config vitest.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts --reporter=verbose",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate --config ../../db/drizzle.config.ts",
+    "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts"
   },
   "dependencies": {
