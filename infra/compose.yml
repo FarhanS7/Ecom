@@ -1,0 +1,95 @@
+# ShopScale local infrastructure (T004).
+# Default profile is `core` only: PostgreSQL + evictable Redis cache.
+# Search, telemetry, object storage, replicas arrive with their own tasks
+# as explicit profiles. Never enable everything implicitly on the 8 GB host.
+#
+# Usage (see scripts/dev-infra.mjs and root package.json infra:* scripts):
+#   pnpm infra:up    # core services, waits for health
+#   pnpm infra:jobs  # core + durable jobs Redis for worker lessons
+#   pnpm infra:down  # stop, PRESERVES volumes
+#   node scripts/dev-infra.mjs reset --confirm   # explicit destructive reset
+#
+# Credentials come from .env (see .env.example). Never commit .env.
+
+name: shopscale
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    profiles: ["core"]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-shopscale}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shopscale}
+      POSTGRES_DB: ${POSTGRES_DB:-shopscale}
+      # Keep the demo database small and observable; Tier L runs use the
+      # benchmark profile with a measured service set, never this default.
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shopscale} -d ${POSTGRES_DB:-shopscale}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          # Starting budget per docs/operations/local-development.md (512-768 MiB).
+          # Measure with `docker stats` and record in local-measurements.md.
+          memory: 768M
+    restart: unless-stopped
+
+  redis-cache:
+    image: redis:7-alpine
+    profiles: ["core"]
+    # Evictable cache: NO volume by design. Cached product/cart snapshots may
+    # be discarded at any time; PostgreSQL is the durable source (data model).
+    command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru --save "" --appendonly no
+    ports:
+      - "${REDIS_CACHE_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          # Starting budget per local-development.md (128 MiB + headroom).
+          memory: 192M
+    restart: unless-stopped
+
+  redis-jobs:
+    image: redis:7-alpine
+    profiles: ["jobs"]
+    # Durable queue transport for BullMQ (ADR-0006). Separate instance from
+    # the evictable cache; default noeviction policy; AOF persisted volume so
+    # a container restart does not silently drop queued effects.
+    command: redis-server --appendonly yes --save "60 1000"
+    ports:
+      - "${REDIS_JOBS_PORT:-6380}:6379"
+    volumes:
+      - jobsdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: unless-stopped
+
+volumes:
+  # Durable: order/stock/ledger data. `down` preserves these; only the
+  # explicitly named reset action removes them.
+  pgdata:
+    name: shopscale_pgdata
+  jobsdata:
+    name: shopscale_jobsdata

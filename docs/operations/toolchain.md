@@ -158,64 +158,39 @@ pnpm lint-staged
 
 ## Docker / Local Development
 
-### Compose Profiles (in `infra/compose.yaml`)
-```yaml
-services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: shopscale
-      POSTGRES_USER: shopscale
-      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    ports: ["5432:5432"]
-    healthcheck: pg_isready -U shopscale -d shopscale
-    profiles: ["core", "all"]
+Canonical file: `infra/compose.yml` (T004; controlled by `scripts/dev-infra.mjs`).
+Default profile is `core` only: PostgreSQL + evictable Redis cache. Search,
+telemetry, object storage, and replicas arrive as explicit profiles with their
+own tasks — never enabled implicitly on the 8 GB host.
 
-  redis-cache:
-    image: redis:7-alpine
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    ports: ["6379:6379"]
-    profiles: ["core", "all"]
+| Service | Image | Profile | Persistence | Memory budget (start) |
+| ------- | ----- | ------- | ----------- | --------------------- |
+| postgres | postgres:16-alpine | core | `shopscale_pgdata` (durable) | 768M |
+| redis-cache | redis:7-alpine | core | none (evictable: maxmemory 128mb, allkeys-lru) | 192M |
+| redis-jobs | redis:7-alpine | jobs | `shopscale_jobsdata` (AOF, durable) | 256M |
 
-  redis-jobs:
-    image: redis:7-alpine
-    ports: ["6380:6380"]
-    profiles: ["jobs", "all"]
-
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    ports: ["9000:9000", "9001:9001"]
-    profiles: ["storage", "all"]
-
-  # Optional: enable explicitly when needed
-  # opensearch:
-  #   image: opensearchproject/opensearch:2.11.0
-  #   profiles: ["search", "all"]
-```
+`down` preserves volumes; only the explicitly named reset action
+(`node scripts/dev-infra.mjs reset --confirm`, refused for production targets)
+deletes project volumes. Measured peaks go in
+`docs/operations/local-measurements.md`.
 
 ### Profile Usage
-```bash
-# Core only (PostgreSQL + Redis cache) — default for daily dev
-docker compose --profile core up -d
-
-# Add jobs Redis for worker development
-docker compose --profile core --profile jobs up -d
-
-# Full stack for integration/E2E
-docker compose --profile all up -d
+```powershell
+pnpm infra:up    # core services, waits for health
+pnpm infra:jobs  # core + jobs Redis for worker lessons
+pnpm infra:ps    # service status
+pnpm infra:down  # stop, volumes preserved
 ```
 
 ## Database Tooling (Drizzle)
 
-- Config: `packages/backend/drizzle.config.ts`
+- Config: `db/drizzle.config.ts` (generate only; runtime uses the reviewed runner)
 - Migrations: `db/migrations/` (reviewed SQL, not auto-pushed)
+- Runner: `packages/backend/src/platform/database.ts` + `src/db/migrate.ts`
 - Commands:
   ```bash
-  pnpm db:generate   # Generate migration from schema changes
-  pnpm db:migrate    # Apply migrations (review first!)
+  pnpm db:generate   # Generate migration from schema changes (review before commit!)
+  pnpm db:migrate    # Apply reviewed migrations via the harness
   pnpm db:seed       # Seed deterministic data (SIZE=s|m|l|xl SEED=42)
   ```
 
