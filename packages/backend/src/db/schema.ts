@@ -3,9 +3,10 @@
 // by hand before commit. Never run push/sync against shared data.
 //
 // T003 bootstrap: minimal probe table only. Domain tables arrive in their
-// owning tasks (users/stores in T009-T015, catalog in T019, ...). Keeping the
-// bootstrap small proves the harness (empty DB -> migrate -> migrate again
-// safely) without pre-creating later-module FK targets.
+// owning tasks (identity in T009 below, stores in T014-T015, catalog in
+// T019, ...). Keeping each migration additive proves the harness
+// (empty DB -> migrate -> migrate again safely) without pre-creating
+// later-module FK targets.
 
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
@@ -24,3 +25,17 @@ export const migrationProbe = pgTable('migration_probe', {
 
 export type MigrationProbe = typeof migrationProbe.$inferSelect;
 export type NewMigrationProbe = typeof migrationProbe.$inferInsert;
+
+// Identity tables (T009): re-exported here so `pnpm db:generate` sees the
+// full schema from this single entry point. Extensionless on purpose:
+// drizzle-kit's CJS loader cannot resolve ESM-style `.js` suffixes.
+export {
+  users,
+  platformRoles,
+  permissions,
+  platformRolePermissions,
+  userPlatformRoles,
+  sessionFamilies,
+  refreshTokens,
+  identityTokens,
+} from '../identity/schema';

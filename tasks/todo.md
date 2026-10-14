@@ -18,7 +18,7 @@ All items are not started. This is the sole implementation status checklist; pha
 
 ## 1. Identity and stores
 
-- [ ] [T009: Model global accounts and session records](items/T009.md)
+- [x] [T009: Model global accounts and session records](items/T009.md)
 - [ ] [T010: Implement registration and login](items/T010.md)
 - [ ] [T011: Implement refresh rotation and logout](items/T011.md)
 - [ ] Checkpoint after T011: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.

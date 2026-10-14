@@ -28,7 +28,7 @@
     "test": "vitest run --config vitest.config.ts",
     "test:unit": "vitest run --config vitest.config.ts --reporter=verbose",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "db:generate": "drizzle-kit generate --config ../../db/drizzle.config.ts",
+    "db:generate": "drizzle-kit generate:pg --config ../../db/drizzle.config.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts"
   },
