@@ -92,6 +92,12 @@ export const refreshTokenPolicy = (tokenHash: string): RateLimitPolicy => ({
   windowSeconds: 60,
 });
 
+export const applicationIpPolicy = (ip: string): RateLimitPolicy => ({
+  key: `rl:apply:ip:${ip}`,
+  limit: 10,
+  windowSeconds: 60,
+});
+
 let sharedRedis: Redis | null = null;
 let testDouble: LimitRedis | null = null;
 

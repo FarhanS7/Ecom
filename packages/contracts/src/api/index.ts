@@ -228,6 +228,57 @@ export const storeMembershipResponse = z.object({
 
 export type StoreMembershipResponse = z.infer<typeof storeMembershipResponse>;
 
+export const storeSlug = z.string().min(2).max(60).regex(/^[a-z0-9-]+$/);
+
+export const sellerApplicationRequest = z.object({
+  slug: storeSlug,
+  name: z.string().min(1).max(120),
+});
+
+export const sellerApplicationResponse = z.object({
+  businessId: z.string().uuid(),
+  storeId: z.string().uuid(),
+  status: z.enum(['pending', 'active', 'suspended']),
+});
+
+export const adminStoreResponse = z.object({
+  storeId: z.string().uuid(),
+  status: z.enum(['pending', 'active', 'suspended']),
+});
+
+export const storeStaffRole = z.enum(['owner', 'manager', 'catalog-editor', 'fulfillment']);
+
+export const invitationCreateRequest = z.object({
+  email: z.string().email().max(254),
+  role: storeStaffRole,
+});
+
+export const invitationResponse = z.object({
+  invitationId: z.string().uuid(),
+  storeId: z.string().uuid(),
+  email: z.string().email(),
+  role: z.string().min(1),
+  expiresAt: z.string().datetime(),
+  /** Raw handoff token: demo only (no email provider yet). Never logged. */
+  token: z.string().min(1),
+});
+
+export const invitationAcceptRequest = z.object({
+  token: z.string().min(1).max(256),
+});
+
+export const memberUpdateRequest = z.object({
+  role: storeStaffRole.optional(),
+  status: z.enum(['active', 'revoked']).optional(),
+});
+
+export const memberResponse = z.object({
+  storeId: z.string().uuid(),
+  userId: z.string().uuid(),
+  role: z.string().min(1),
+  status: z.enum(['active', 'revoked']),
+});
+
 // Admin
 export const adminSellerApproveRequest = z.object({
   action: z.enum(['approve', 'suspend', 'reject']),
