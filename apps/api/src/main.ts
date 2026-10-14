@@ -12,6 +12,7 @@ import type { ValidationError } from 'class-validator';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { getEnv, resetEnvCache } from '@shopscale/config';
 import type { Env } from '@shopscale/config';
+import { SECURITY_HEADERS } from '@shopscale/backend';
 import { AppModule } from './app.module.js';
 import { ProblemFilter } from './problem.filter.js';
 import { requestIdHook } from './request-id.hook.js';
@@ -69,6 +70,21 @@ export async function createApp(): Promise<{ app: NestFastifyApplication; env: E
   // getInstance() is adapter-typed as any; the hook module declares only the
   // structural shapes it uses, so no fastify import leaks into our code.
   fastify.addHook('onRequest', requestIdHook);
+  fastify.addHook(
+    'onSend',
+    (
+      _req: unknown,
+      reply: { header: (name: string, value: string) => unknown },
+      payload: unknown,
+      done: (err: Error | null, payload?: unknown) => void,
+    ) => {
+      // Safe headers on every response (T013b); no per-route work needed.
+      for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+        reply.header(name, value);
+      }
+      done(null, payload);
+    },
+  );
 
   // Unknown routes flow through Nest's own not-found handling into the
   // global ProblemFilter (single-handler limit on the Fastify adapter), so

@@ -3,6 +3,7 @@
 // module-definition time, so the env must exist before the first import of
 // AppModule. Individual tests may mutate env afterwards via resetEnvCache().
 import { resetEnvCache } from '@shopscale/config';
+import { setLimiterRedisForTests } from '@shopscale/backend';
 
 // The closed-port URL is the DEFAULT only: a real DATABASE_URL provided by
 // the environment (CI services, bench host) is always respected. Specs that
@@ -14,3 +15,10 @@ process.env['JWT_ACCESS_SECRET'] = 't005-access-secret-000000000000000';
 process.env['JWT_REFRESH_SECRET'] = 't005-refresh-secret-00000000000000';
 process.env['MOCK_PAYMENTS_SECRET'] = 't005-mock-payments-secret-00000000';
 resetEnvCache();
+
+// Default-deny would be wrong here: most suites prove non-limiter behavior,
+// so the limiter is allow-all unless a spec installs its own double
+// (auth-security.spec.ts does). Production never installs this.
+setLimiterRedisForTests({
+  eval: async () => [1, 60_000],
+});

@@ -5,21 +5,35 @@
 // control of flags, and the values are URL-safe by construction (JWT / hex).
 
 import { Body, ConflictException, Controller, Get, HttpCode, NotFoundException, Post, Req, Res, UnauthorizedException, UnprocessableEntityException, UseGuards } from '@nestjs/common';
+import { ForbiddenException } from '@nestjs/common';
 import { getEnv } from '@shopscale/config';
 import {
   AuthError,
   authenticateAccount,
+  buildProblem,
   confirmPasswordReset,
   confirmVerification,
+  consumeLimit,
   extractCookie,
+  getLimiterRedis,
   getSafeUser,
+  isSameOriginRequest,
+  LimiterUnavailableError,
+  loginEmailPolicy,
+  loginIpPolicy,
+  normalizeEmail,
+  refreshIpPolicy,
+  refreshTokenPolicy,
   registerAccount,
   requestPasswordReset,
   requestVerification,
+  resolveRequestId,
   revokeFamily,
   rotateRefresh,
+  sha256Hex,
 } from '@shopscale/backend';
-import type { Actor } from '@shopscale/backend';
+import type { Actor, RateLimitPolicy } from '@shopscale/backend';
+import type { ProblemResponse } from '@shopscale/contracts';
 import {
   authCookies,
   authResponse,
@@ -64,6 +78,19 @@ function cookieFlags(maxAge: number, path: string): string {
 
 interface PassthroughReply {
   header: (name: string, value: string | string[]) => unknown;
+  status: (code: number) => unknown;
+}
+
+/** Send a gate denial (429/503) with headers, for early handler return. */
+function sendGateDenial(
+  res: PassthroughReply,
+  gate: { status?: number; retryAfterSeconds?: number; body?: unknown },
+): unknown {
+  if (gate.retryAfterSeconds !== undefined) {
+    res.header('Retry-After', String(gate.retryAfterSeconds));
+  }
+  res.status(gate.status ?? 429);
+  return gate.body;
 }
 
 function issueAuthCookies(
@@ -87,6 +114,78 @@ function clearAuthCookies(res: PassthroughReply): void {
 interface CookieRequest {
   headers?: Record<string, string | string[] | undefined>;
   actor?: Actor;
+  ip?: string;
+}
+
+function firstHeader(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+export interface AuthGateResult {
+  allowed: boolean;
+  status?: number;
+  retryAfterSeconds?: number;
+  body?: ProblemResponse;
+}
+
+/**
+ * Mutation gate for credential-bearing endpoints (T013b): same-origin check,
+ * then IP + identity budgets. Denials carry their own status/body so the
+ * handler can send them with headers (Retry-After); the limiter outage maps
+ * to fail-closed 503. Pure sequencing over backend primitives.
+ */
+export async function checkAuthGate(
+  req: CookieRequest,
+  policies: RateLimitPolicy[],
+): Promise<AuthGateResult> {
+  const headers = req.headers ?? {};
+  const origin = firstHeader(headers['origin']);
+  const referer = firstHeader(headers['referer']);
+  const host = firstHeader(headers['host']);
+  if (!isSameOriginRequest({ origin, referer, host })) {
+    throw new ForbiddenException('Cross-origin request refused.');
+  }
+  const resolved = resolveRequestId(headers);
+  const requestId = resolved.ok ? resolved.requestId : 'unparsable-request-id';
+  try {
+    const redis = getLimiterRedis();
+    for (const policy of policies) {
+      const outcome = await consumeLimit(redis, policy);
+      if (!outcome.allowed) {
+        return {
+          allowed: false,
+          status: 429,
+          retryAfterSeconds: outcome.retryAfterSeconds,
+          body: buildProblem({
+            code: 'RATE_LIMITED',
+            title: 'Too many requests',
+            status: 429,
+            detail: 'Rate limit exceeded. Try again later.',
+            requestId,
+          }),
+        };
+      }
+    }
+    return { allowed: true };
+  } catch (err) {
+    if (err instanceof LimiterUnavailableError) {
+      return {
+        allowed: false,
+        status: 503,
+        body: buildProblem({
+          code: 'INTERNAL_ERROR',
+          title: 'Service temporarily unavailable',
+          status: 503,
+          requestId,
+        }),
+      };
+    }
+    throw err;
+  }
+}
+
+function clientIp(req: CookieRequest): string {
+  return typeof req.ip === 'string' && req.ip !== '' ? req.ip : 'unknown';
 }
 
 function refreshCookieOf(req: CookieRequest): string | null {
@@ -110,10 +209,16 @@ export class AuthController {
   @Post('register')
   @HttpCode(201)
   async register(
+    @Req() req: CookieRequest,
     @Body() rawBody: unknown,
     @Res({ passthrough: true }) res: PassthroughReply,
   ): Promise<unknown> {
     const body = parseBody(registerRequest, rawBody);
+    const gate = await checkAuthGate(req, [
+      loginIpPolicy(clientIp(req)),
+      loginEmailPolicy(normalizeEmail(body.email)),
+    ]);
+    if (!gate.allowed) return sendGateDenial(res, gate);
     try {
       const issued = await registerAccount({ email: body.email, password: body.password });
       issueAuthCookies(res, issued);
@@ -126,10 +231,16 @@ export class AuthController {
   @Post('login')
   @HttpCode(200)
   async login(
+    @Req() req: CookieRequest,
     @Body() rawBody: unknown,
     @Res({ passthrough: true }) res: PassthroughReply,
   ): Promise<unknown> {
     const body = parseBody(loginRequest, rawBody);
+    const gate = await checkAuthGate(req, [
+      loginIpPolicy(clientIp(req)),
+      loginEmailPolicy(normalizeEmail(body.email)),
+    ]);
+    if (!gate.allowed) return sendGateDenial(res, gate);
     try {
       const issued = await authenticateAccount({ email: body.email, password: body.password });
       issueAuthCookies(res, issued);
@@ -146,6 +257,11 @@ export class AuthController {
     @Res({ passthrough: true }) res: PassthroughReply,
   ): Promise<unknown> {
     const raw = refreshCookieOf(req);
+    const gate = await checkAuthGate(req, [
+      refreshIpPolicy(clientIp(req)),
+      ...(raw ? [refreshTokenPolicy(sha256Hex(raw))] : []),
+    ]);
+    if (!gate.allowed) return sendGateDenial(res, gate);
     if (!raw) {
       clearAuthCookies(res);
       throw new UnauthorizedException('Invalid session.');
@@ -193,10 +309,19 @@ export class AuthController {
 
   @Post('password-reset/request')
   @HttpCode(202)
-  async requestReset(@Body() rawBody: unknown): Promise<unknown> {
+  async requestReset(
+    @Req() req: CookieRequest,
+    @Body() rawBody: unknown,
+    @Res({ passthrough: true }) res: PassthroughReply,
+  ): Promise<unknown> {
     // Always 202 with the same body: unknown emails create nothing and take
     // an indistinguishable path (no account-existence oracle).
     const body = parseBody(passwordResetRequest, rawBody);
+    const gate = await checkAuthGate(req, [
+      loginIpPolicy(clientIp(req)),
+      loginEmailPolicy(normalizeEmail(body.email)),
+    ]);
+    if (!gate.allowed) return sendGateDenial(res, gate);
     await requestPasswordReset(body.email);
     return flowAccepted.parse({ ok: true });
   }
