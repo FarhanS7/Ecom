@@ -41,7 +41,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T020: Implement seller catalog mutations](items/T020.md) (T020a+T020b; docs/reviews/t020-context.md; uniform-404 scope rule recorded — earlier 403 draft corrected against T018 matrix convention)
 - [x] [T021: Implement channel-aware catalog reads](items/T021.md) (T021a+T021b; docs/reviews/t021-context.md; spec parked in backend suite per T019 precedent, subtask doc amended)
 - [ ] Checkpoint after T021: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
-- [ ] [T022: Add stable keyset pagination](items/T022.md)
+- [x] [T022: Add stable keyset pagination](items/T022.md) (T022a+T022b; docs/reviews/t022-context.md; migration 0005-catalog-indexes recorded as drift — indexes already in 0006, no new migration invented; milestone-2-checkpoint-1.md)
 - [ ] [T023: Build the token-based component foundation](items/T023.md)
 - [ ] [T024: Build connected storefront home pages](items/T024.md)
 - [ ] Checkpoint after T024: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.

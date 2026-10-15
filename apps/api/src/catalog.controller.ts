@@ -6,7 +6,7 @@
 // visibility chain in SQL on every read.
 
 import { Controller, Get, NotFoundException, Param, Query, UnprocessableEntityException } from '@nestjs/common';
-import { getChannelProduct, listChannelProducts, resolveActiveStoreSlug } from '@shopscale/backend';
+import { CursorError, getChannelProduct, listChannelProducts, resolveActiveStoreSlug } from '@shopscale/backend';
 import { channelListQuery, channelListResponse, channelProductDetail } from '@shopscale/contracts';
 
 const SLUG_PATTERN = /^[a-z0-9-]{2,60}$/;
@@ -28,16 +28,16 @@ export class CatalogController {
   async marketplaceList(@Query() rawQuery: Record<string, unknown>): Promise<unknown> {
     const parsed = channelListQuery.safeParse(rawQuery);
     if (!parsed.success) unprocessable();
-    const { category, minPrice, maxPrice, sort, limit } = parsed.data;
-    const result = await listChannelProducts({
+    const { category, minPrice, maxPrice, sort, limit, cursor } = parsed.data;
+    return this.list({
       channel: 'marketplace',
       categorySlug: category,
       minPriceCents: minPrice,
       maxPriceCents: maxPrice,
       sort,
       limit,
+      cursor,
     });
-    return channelListResponse.parse(result);
   }
 
   @Get('marketplace/products/:productSlug')
@@ -59,8 +59,8 @@ export class CatalogController {
     // Store resolution re-checks status in SQL; false → same 404 as an
     // unknown slug (channel.service.ts parity).
     if (!(await resolveActiveStoreSlug(slug))) notFound();
-    const { category, minPrice, maxPrice, sort, limit } = parsed.data;
-    const result = await listChannelProducts({
+    const { category, minPrice, maxPrice, sort, limit, cursor } = parsed.data;
+    return this.list({
       channel: 'store',
       storeSlug: slug,
       categorySlug: category,
@@ -68,8 +68,8 @@ export class CatalogController {
       maxPriceCents: maxPrice,
       sort,
       limit,
+      cursor,
     });
-    return channelListResponse.parse(result);
   }
 
   @Get('stores/:slug/products/:productSlug')
@@ -78,5 +78,17 @@ export class CatalogController {
     const detail = await getChannelProduct({ channel: 'store', storeSlug: slug, productSlug });
     if (!detail) notFound();
     return channelProductDetail.parse(detail);
+  }
+
+  /** Shared list path: a cursor from a different sort/channel/filter set is
+   * a 422 (public input error), never a silent second page. */
+  private async list(query: Parameters<typeof listChannelProducts>[0]): Promise<unknown> {
+    try {
+      const result = await listChannelProducts(query);
+      return channelListResponse.parse(result);
+    } catch (err) {
+      if (err instanceof CursorError) unprocessable();
+      throw err;
+    }
   }
 }

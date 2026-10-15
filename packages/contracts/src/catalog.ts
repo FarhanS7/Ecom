@@ -119,6 +119,8 @@ export const channelListQuery = z.object({
   maxPrice: z.coerce.number().int().nonnegative().optional(),
   sort: z.enum(['newest', 'price_asc', 'price_desc', 'popularity']).optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
+  // Opaque keyset cursor from a previous page's nextCursor (T022b).
+  cursor: z.string().max(512).optional(),
 });
 
 export type ChannelListQueryInput = z.infer<typeof channelListQuery>;
