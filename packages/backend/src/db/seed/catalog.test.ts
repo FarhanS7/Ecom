@@ -5,7 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCategoryPath } from '../../catalog/category.service.js';
 import { planIdentity, type SeedShape } from './identity.js';
-import { planCatalog, type CatalogPlan } from './catalog.js';
+import { COVERAGE_LANE_LENGTH, planCatalog, type CatalogPlan } from './catalog.js';
 
 const SHAPE: SeedShape = {
   stores: 3,
@@ -145,6 +145,41 @@ describe('visible vs invisible products (T028b)', () => {
       const flags = fixture.publications.find((row) => row.product_id === id)!;
       expect(flags.store_enabled || flags.marketplace_enabled).toBe(true);
       expect(flags.published_at).toBeNull();
+    }
+  });
+});
+
+describe('guaranteed state coverage (T028c)', () => {
+  const lanes: SeedShape = { ...SHAPE, productsPerStore: COVERAGE_LANE_LENGTH };
+
+  it('seeds every storefront state in every catalogued store, across seeds', () => {
+    for (const seed of [42, 43, 44, 45, 46, 7, 1234]) {
+      const fixture = plan(seed, lanes);
+      for (const store of fixture.stores.filter((row) => !row.empty)) {
+        expect(store.storeProductIds.length).toBeGreaterThan(0);
+        // The ADR-0010 mirror image: a flagged draft that must stay invisible, and
+        // an archived product that must too.
+        expect(store.draftFlaggedProductIds.length).toBeGreaterThan(0);
+        expect(store.archivedProductIds.length).toBeGreaterThan(0);
+        // An active product that is on NO channel: the "unlisted" case.
+        const unlisted = fixture.publications.filter(
+          (row) =>
+            !row.store_enabled &&
+            !row.marketplace_enabled &&
+            store.productIds.includes(row.product_id) &&
+            fixture.products.find((product) => product.id === row.product_id)?.status === 'active',
+        );
+        expect(unlisted.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('keeps exactly one marketplace-capable store visible on the marketplace', () => {
+    for (const seed of [42, 43, 44]) {
+      const fixture = plan(seed, lanes);
+      const withMarketplace = fixture.stores.filter((store) => store.marketplaceProductIds.length > 0);
+      expect(withMarketplace).toHaveLength(1);
+      expect(withMarketplace[0]?.slug).toBe('seed-alpha');
     }
   });
 });

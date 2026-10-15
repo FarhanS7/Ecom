@@ -114,6 +114,35 @@ const BRANDS = ['Northwind', 'Orbit', 'Ridgeway', 'Stillwater', 'Terrace'] as co
 type ProductKind = 'store' | 'both' | 'nowhere' | 'draft' | 'archived';
 
 /**
+ * Full state coverage requires at least this many products per catalogued store.
+ * The first four products of every catalogued store are FORCED into the states a
+ * storefront has to be able to demonstrate, because a seeded dataset whose whole
+ * purpose is verification must not be able to omit the state under test by a lucky
+ * (or unlucky) weighted draw. Products beyond the lane are drawn normally.
+ */
+export const COVERAGE_LANE_LENGTH = 4;
+
+/**
+ * The forced lane. Index 0 is the only source of marketplace visibility, so a
+ * store that may publish to the marketplace gets `both` and a store-only store
+ * gets `store` — which is what keeps the two channels distinguishable.
+ */
+function coverageKind(productIndex: number, allowMarketplace: boolean): ProductKind | null {
+  switch (productIndex) {
+    case 0:
+      return allowMarketplace ? 'both' : 'store';
+    case 1:
+      return 'draft';
+    case 2:
+      return 'archived';
+    case 3:
+      return 'nowhere';
+    default:
+      return null;
+  }
+}
+
+/**
  * Category tree. Categories are GLOBAL in this schema (unique slug, no store
  * column), so the same tree serves every store — which is also why the seed
  * gives every store products in the same categories.
@@ -189,13 +218,15 @@ export function planCatalog(identity: IdentityPlan, options?: { seed?: number })
       const productId = idFor('product', store.slug, productIndex);
       const category = categories[(productIndex * 2) % categories.length]!;
 
-      const kind = weighted<ProductKind>(rng, [
-        ['store', 64],
-        ['both', allowMarketplace ? 16 : 0],
-        ['nowhere', 12],
-        ['draft', 5],
-        ['archived', 3],
-      ]);
+      const kind =
+        coverageKind(productIndex, allowMarketplace) ??
+        weighted<ProductKind>(rng, [
+          ['store', 64],
+          ['both', allowMarketplace ? 16 : 0],
+          ['nowhere', 12],
+          ['draft', 5],
+          ['archived', 3],
+        ]);
 
       const status: SeedProductRow['status'] =
         kind === 'draft' ? 'draft' : kind === 'archived' ? 'archived' : 'active';
