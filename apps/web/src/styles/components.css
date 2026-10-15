@@ -394,3 +394,122 @@
     padding-left: var(--space-3);
   }
 }
+
+/* ---------------------------------------------------- Storefront home (T024)
+   Hero (§5.3), product grid (§7 PLP card) and the category chip row. */
+.ss-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--grid-gap);
+  min-height: 320px;
+  padding: var(--space-8);
+}
+.ss-hero__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  align-items: flex-start;
+}
+.ss-hero__headline {
+  max-width: 16ch;
+}
+.ss-hero__index {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.ss-hero__rule {
+  width: 110px;
+  height: 1px;
+  background: var(--text-tertiary);
+}
+.ss-hero__index-title {
+  font-weight: 500;
+}
+.ss-hero__index-desc {
+  color: var(--text-secondary);
+}
+.ss-hero__stage {
+  display: none;
+}
+
+.ss-home__products,
+.ss-home__categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+.ss-home__categories-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.ss-home__empty {
+  color: var(--text-secondary);
+}
+.ss-product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--grid-gap);
+  list-style: none;
+}
+.ss-product {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+}
+.ss-product__media {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-inner);
+  background: var(--surface-strong);
+  color: var(--text-tertiary);
+  font-size: 28px;
+  font-weight: 500;
+}
+.ss-product__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.ss-product__brand {
+  color: var(--text-secondary);
+}
+.ss-product__price {
+  font-weight: 600;
+}
+.ss-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+/* §8: 4 cols desktop → 2 cols tablet → 1 col mobile; hero stays stacked. */
+@media (min-width: 1200px) {
+  .ss-hero {
+    grid-template-columns: 1fr 1fr;
+    min-height: 400px;
+  }
+  .ss-hero__stage {
+    display: grid;
+    place-items: center;
+  }
+}
+@media (max-width: 1199px) {
+  .ss-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 767px) {
+  .ss-product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ss-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+}

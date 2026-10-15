@@ -9,7 +9,7 @@
 // animation). Accessible by default: icon-only controls REQUIRE `label`.
 
 import type { CSSProperties, ReactNode } from 'react';
-import { Fragment } from 'react';
+import { Fragment, useId } from 'react';
 import { TENANT_ATTRIBUTE, tenantThemeStyle } from '@/components/theme';
 
 /* ------------------------------------------------------------------ icons
@@ -444,6 +444,75 @@ export function RatingBadge({ value }: { value: number }) {
       </span>
       <span aria-hidden="true">{value}</span>
     </span>
+  );
+}
+
+/**
+ * Decorative ↗ affordance for a CLICKABLE CARD (DESIGN.md §5.1): the whole
+ * card is the single anchor, so this must not be a second link.
+ */
+export function CardArrow({
+  position = 'tr',
+  size = 'md',
+}: {
+  position?: 'tr' | 'tl' | 'bl';
+  size?: 'md' | 'sm';
+}) {
+  const classes = [
+    'ss-icon-btn',
+    'ss-arrow',
+    `ss-arrow--${position}`,
+    size === 'sm' ? 'ss-icon-btn--sm' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <span aria-hidden="true" className={classes}>
+      <ArrowUpRightIcon className="ss-icon-rotate" />
+    </span>
+  );
+}
+
+export interface ProductCardProps {
+  href: string;
+  title: string;
+  /** Pre-formatted price label (keeps Intl/locale out of the primitive). */
+  priceLabel: string;
+  brand?: string | null;
+  ratingCount?: number;
+  /** Overrides the computed arrow/action label. */
+  actionLabel?: string;
+}
+
+/**
+ * Product tile (DESIGN.md §7 PLP card). The image slot is a neutral tile until
+ * media arrives (T035) — the card never renders a fake product photo.
+ */
+export function ProductCard({
+  href,
+  title,
+  priceLabel,
+  brand = null,
+  ratingCount = 0,
+  actionLabel,
+}: ProductCardProps) {
+  const titleId = useId();
+  return (
+    <Card href={href} labelledBy={titleId} className="ss-product">
+      <div className="ss-product__media" aria-hidden="true">
+        {title.slice(0, 1).toUpperCase()}
+      </div>
+      <CardArrow position="tr" size="sm" />
+      <div className="ss-product__body">
+        <h3 id={titleId} className="type-card-title">
+          {title}
+        </h3>
+        {brand ? <p className="type-caption ss-product__brand">{brand}</p> : null}
+        <p className="type-body-sm ss-product__price">{priceLabel}</p>
+        {ratingCount > 0 ? <RatingBadge value={ratingCount} /> : null}
+      </div>
+      <span className="sr-only">{actionLabel ?? `Open ${title}`}</span>
+    </Card>
   );
 }
 
