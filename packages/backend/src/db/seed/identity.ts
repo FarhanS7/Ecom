@@ -279,6 +279,23 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
 }
 
 /**
+ * Batch inserts pass JSON as an already-serialized string (canonicalJson keeps the
+ * bytes identical between runs). A bare `::jsonb` makes Postgres infer the
+ * parameter's type as jsonb, and the driver then JSON-encodes the value a second
+ * time — the column ends up holding a jsonb STRING like "[...]" instead of an
+ * array, which only shows up when something tries to read it as an array
+ * (`jsonb_array_elements_text` fails with "cannot extract elements from a
+ * scalar"). Forcing the parameter through text keeps the parse on the database
+ * side, where the text we serialized is interpreted as the JSON it is.
+ *
+ * Verified against PostgreSQL 17: `$1::jsonb` with '["a"]' stores a string;
+ * `$1::text::jsonb` stores an array.
+ */
+function castForParameter(cast: string): string {
+  return cast === 'jsonb' ? 'text::jsonb' : cast;
+}
+
+/**
  * Batched multi-row INSERT ... ON CONFLICT DO NOTHING.
  * Returns how many rows were actually inserted, which is how idempotence is
  * observed rather than assumed: a second seed run must report zero.
@@ -302,7 +319,7 @@ export async function insertChunked(
         params.push(value);
         const column = options.columns[columnIndex];
         const cast = column ? options.casts?.[column] : undefined;
-        return `$${params.length}${cast ? `::${cast}` : ''}`;
+        return `$${params.length}${cast ? `::${castForParameter(cast)}` : ''}`;
       });
       return `(${placeholders.join(',')})`;
     });
