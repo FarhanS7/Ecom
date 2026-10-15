@@ -159,8 +159,18 @@ export function popCursor(state: ListQueryState): ListQueryState {
   return { filters: state.filters, cursors: state.cursors.slice(0, -1) };
 }
 
-/** True when any non-default filter is set (drives the Clear-filters link). */
-export function hasActiveFilters(state: ListQueryState): boolean {
+/**
+ * Change one or more filters and RESET pagination. A cursor is bound to the
+ * filter fingerprint it was issued for (T022), so carrying a stack across a
+ * filter change would ask the API for a page of a result set that no longer
+ * matches — the API would reject it, and the UI would show an error the user
+ * cannot explain. Dropping the stack keeps the invariant in the client.
+ */
+export function withFilters(state: ListQueryState, partial: Partial<ListFilters>): ListQueryState {
+  return { filters: { ...state.filters, ...partial }, cursors: [] };
+}
+
+/** True when any non-default filter is set (drives the Clear-filters link). */export function hasActiveFilters(state: ListQueryState): boolean {
   const { category, minPrice, maxPrice, sort } = state.filters;
   return category !== null || minPrice !== null || maxPrice !== null || sort !== DEFAULT_FILTERS.sort;
 }

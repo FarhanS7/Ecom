@@ -45,7 +45,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T023: Build the token-based component foundation](items/T023.md) (T023a+T023b; docs/reviews/t023-context.md; T016 theme contract deliberately not widened — fonts/gradient/swatches need an ADR; Playwright screenshots written but not diffed — pending bench host)
 - [x] [T024: Build connected storefront home pages](items/T024.md) (T024a+T024b; docs/reviews/t024-context.md; link shape decided in one place per channel; outage vs empty kept distinct; PLP/PDP link targets asserted but not navigated — routes land T025/T026; catalog gateway prefix still deferred to T025)
 - [x] Checkpoint after T024: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded. (docs/reviews/milestone-2-checkpoint-2.md; browser/live-DB/independent-review legs recorded as pendings)
-- [ ] [T025: Build product listing and filters](items/T025.md)
+- [x] [T025: Build product listing and filters](items/T025.md) (T025a+T025b; docs/reviews/t025-context.md; URL is the single source of truth for filters/sort/cursor stack; stale-response guard unit-tested; catalog gateway templates landed (T021b deferral); listing is a client island — no-JS shows the loading state, recorded as a limitation; e2e/Back-Forward legs pending bench host)
 - [ ] [T026: Build product detail and variant selection](items/T026.md)
 - [ ] [T027: Build seller catalog editing screens](items/T027.md)
 - [ ] Checkpoint after T027: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.

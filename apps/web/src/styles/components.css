@@ -517,6 +517,9 @@
 /* ---------------------------------------------------- Product listing (T025)
    §7 PLP: glass filter card beside the product grid; skeletons are card
    shapes with a shimmering wash (never a spinner inside a card). */
+.ss-plp-title {
+  margin-bottom: var(--grid-gap);
+}
 .ss-plp {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);

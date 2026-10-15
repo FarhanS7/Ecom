@@ -16,6 +16,11 @@ import {
 } from '@/components/ui';
 import { HeroCard } from '@/features/storefront/hero';
 import type { HeroSlide } from '@/features/storefront/hero';
+import { formatPrice } from '@/lib/price';
+
+// Re-exported so the home's public API is unchanged (T025b moved the
+// implementation to lib/price so the PLP shares one money formatter).
+export { formatPrice };
 
 export interface HomeProduct {
   slug: string;
@@ -41,20 +46,6 @@ export interface HomeContent {
   socials?: Array<{ platform: string; url: string }> | undefined;
   /** Honest empty-state copy shown in place of the product grid. */
   emptyMessage?: string | undefined;
-}
-
-/** Deterministic price label; the primitive never does locale work itself. */
-export function formatPrice(cents: number, currency: string): string {
-  const amount = cents / 100;
-  try {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      currencyDisplay: 'narrowSymbol',
-    }).format(amount);
-  } catch {
-    return `${amount.toFixed(2)} ${currency}`;
-  }
 }
 
 /** Channel-correct product link (the one place link shape is decided). */
