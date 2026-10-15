@@ -164,7 +164,7 @@ export async function createProduct(input: ProductCreateInput, sql: Sql = getDb(
     try {
       rows = (await tx.unsafe(
         `INSERT INTO "products" ("store_id","category_id","slug","title","description","brand","attributes","currency")
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         VALUES ($1,$2,$3,$4,$5,$6,$7::text::jsonb,$8)
          RETURNING ${PRODUCT_COLUMNS};`,
         [
           input.storeId,
@@ -173,6 +173,11 @@ export async function createProduct(input: ProductCreateInput, sql: Sql = getDb(
           input.title,
           input.description,
           input.brand,
+          // Serialized here and parsed by the database via ::text::jsonb. A bare
+          // ::jsonb (or an uncast parameter against a jsonb column) makes Postgres
+          // infer the parameter as jsonb, and the driver then JSON-encodes this
+          // string a second time, storing a JSON STRING instead of an object.
+          // Proven live in T028c.
           JSON.stringify(input.attributes),
           input.currency,
         ],
@@ -232,8 +237,9 @@ export async function updateProduct(input: ProductMutateInput & { patch: Product
     for (const [key, column] of Object.entries(UPDATABLE)) {
       const value = (input.patch as Record<string, unknown>)[key];
       if (value !== undefined) {
+        // jsonb values are serialized and cast through text (see createProduct).
         values.push(key === 'attributes' ? JSON.stringify(value) : value);
-        sets.push(`"${column}" = $${values.length}`);
+        sets.push(`"${column}" = $${values.length}${column === 'attributes' ? '::text::jsonb' : ''}`);
       }
     }
     if (sets.length === 0) {
@@ -319,7 +325,7 @@ export async function createVariant(
     try {
       inserted = (await tx.unsafe(
         `INSERT INTO "product_variants" ("product_id","store_id","sku","price_cents","attributes")
-         VALUES ($1,$2,$3,$4,$5) RETURNING "id";`,
+         VALUES ($1,$2,$3,$4,$5::text::jsonb) RETURNING "id";`,
         [input.productId, input.storeId, input.sku, input.priceCents, JSON.stringify(input.attributes)],
       )) as unknown as Array<{ id: string }>;
     } catch (err) {
@@ -361,14 +367,17 @@ export async function updateVariant(
 ): Promise<VariantState> {
   return sql.begin(async (tx) => {
     const sets: string[] = [];
-    const values: unknown[] = [input.storeId, input.variantId];
+    // Scope and version occupy $1-$4 so the WHERE clause below stays fixed while
+    // the SET list grows with the patch. (They used to be appended after the patch
+    // values, which shifted the placeholders and made every call fail.)
+    const values: unknown[] = [input.storeId, input.variantId, input.productId, input.expectedVersion];
     if (input.patch.priceCents !== undefined) {
       values.push(input.patch.priceCents);
       sets.push(`"price_cents" = $${values.length}`);
     }
     if (input.patch.attributes !== undefined) {
       values.push(JSON.stringify(input.patch.attributes));
-      sets.push(`"attributes" = $${values.length}`);
+      sets.push(`"attributes" = $${values.length}::text::jsonb`);
     }
     if (input.patch.status !== undefined) {
       values.push(input.patch.status);
@@ -386,7 +395,7 @@ export async function updateVariant(
        WHERE v."store_id" = $1 AND v."id" = $2 AND p."store_id" = v."store_id"
          AND p."id" = v."product_id" AND p."id" = $3 AND p."version" = $4
        RETURNING v."id", v."product_id", v."sku", v."price_cents", v."attributes", v."status";`,
-      [...values, input.productId, input.expectedVersion] as never[],
+      values as never[],
     )) as unknown as Array<{
       id: string;
       product_id: string;

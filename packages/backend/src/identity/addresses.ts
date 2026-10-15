@@ -37,7 +37,10 @@ export async function createAddress(
   sql: Sql = getDb(),
 ): Promise<SafeAddress> {
   const rows = (await sql.unsafe(
-    `INSERT INTO "addresses" ("user_id","fields") VALUES ($1,$2) RETURNING "id","fields","created_at";`,
+    `INSERT INTO "addresses" ("user_id","fields") VALUES ($1,$2::text::jsonb) RETURNING "id","fields","created_at";`,
+    // Serialized here and parsed by the database: a bare ::jsonb (or an uncast
+    // parameter against a jsonb column) would be double-encoded into a JSON string
+    // by the driver. Proven live in T028c.
     [userId, JSON.stringify(fields)],
   )) as unknown as Array<{ id: string; fields: unknown; created_at: Date }>;
   const row = rows[0];
@@ -73,7 +76,7 @@ export async function updateAddress(
   sql: Sql = getDb(),
 ): Promise<SafeAddress | null> {
   const rows = (await sql.unsafe(
-    `UPDATE "addresses" SET "fields" = $1 WHERE "id" = $2 AND "user_id" = $3 RETURNING "id","fields","created_at";`,
+    `UPDATE "addresses" SET "fields" = $1::text::jsonb WHERE "id" = $2 AND "user_id" = $3 RETURNING "id","fields","created_at";`,
     [JSON.stringify(fields), addressId, userId],
   )) as unknown as Array<{ id: string; fields: unknown; created_at: Date }>;
   const row = rows[0];

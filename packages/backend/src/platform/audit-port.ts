@@ -23,13 +23,15 @@ export interface AuditEvent {
 export async function recordAudit(event: AuditEvent, sql: Sql = getDb()): Promise<void> {
   await sql.unsafe(
     `INSERT INTO "audit_logs" ("actor_id","store_id","action","entity_type","entity_id","redacted_before","redacted_after","request_id")
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8);`,
+     VALUES ($1,$2,$3,$4,$5,$6::text::jsonb,$7::text::jsonb,$8);`,
     [
       event.actorId,
       event.storeId,
       event.action,
       event.entityType,
       event.entityId,
+      // Serialized here and parsed by the database: an uncast parameter against a
+      // jsonb column would be double-encoded into a JSON string (T028c finding).
       event.before ? JSON.stringify(event.before) : null,
       event.after ? JSON.stringify(event.after) : null,
       event.requestId,
