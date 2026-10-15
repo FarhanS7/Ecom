@@ -1,0 +1,396 @@
+/* @shopscale/web - Component structure (T023b). Structure, hover/active and
+   motion only: every colour, radius, spacing, shadow and duration resolves to
+   a tokens.css variable (DESIGN.md §3). Class names are namespaced `ss-`;
+   inline styles cannot express :hover/:active/animation, which is why these
+   rules live here rather than in ui.tsx. */
+
+/* Frame (§4) — rounded canvas frame, 16px gaps everywhere, 1440px cap. */
+.ss-frame {
+  display: grid;
+  gap: var(--grid-gap);
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: var(--page-pad);
+  border-radius: var(--radius-frame);
+  min-height: 100vh;
+  align-content: start;
+}
+
+/* Card (§5.1) */
+.ss-card {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  padding: var(--card-pad);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+  color: inherit;
+  transition:
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.ss-card--flush {
+  padding: 0;
+}
+.ss-card--plain {
+  background: var(--surface-solid);
+}
+/* Glass fallback when backdrop-filter is unsupported (§11). */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ss-card,
+  .ss-header {
+    background: var(--surface-strong);
+  }
+}
+.ss-card--link:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  text-decoration: none;
+}
+.ss-card--link:hover .ss-card__zoom {
+  transform: scale(1.04);
+}
+.ss-card__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--dur-slow) var(--ease);
+}
+
+/* Circular action buttons (§5.6) */
+.ss-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-float);
+  transition:
+    background var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.ss-icon-btn:hover {
+  background: var(--color-accent);
+}
+.ss-icon-btn:hover .ss-icon-rotate {
+  transform: rotate(45deg);
+}
+.ss-icon-btn:active {
+  transform: scale(0.97);
+}
+.ss-icon-btn--sm {
+  width: 36px;
+  height: 36px;
+}
+.ss-icon-btn--ghost {
+  background: var(--surface-strong);
+  box-shadow: none;
+}
+.ss-icon-btn--on {
+  color: var(--color-heart);
+}
+.ss-icon-rotate {
+  transition: transform var(--dur) var(--ease);
+}
+.ss-icon-wrap {
+  position: relative;
+  display: inline-grid;
+}
+.ss-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--radius-pill);
+  background: var(--text-primary);
+  color: var(--text-on-dark);
+  font-size: 10px;
+  line-height: 16px;
+  text-align: center;
+}
+.ss-arrow {
+  position: absolute;
+  z-index: 2;
+}
+.ss-arrow--tr {
+  top: var(--space-4);
+  right: var(--space-4);
+}
+.ss-arrow--tl {
+  top: var(--space-4);
+  left: var(--space-4);
+}
+.ss-arrow--bl {
+  bottom: var(--space-4);
+  left: var(--space-4);
+}
+
+/* Buttons (§5.4) — one lime primary CTA per view. */
+.ss-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 52px;
+  padding: 0 var(--space-2) 0 var(--space-6);
+  border: 0;
+  border-radius: var(--radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+.ss-btn--primary {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+.ss-btn--secondary {
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-float);
+}
+.ss-btn:active {
+  transform: scale(0.97);
+}
+.ss-btn:disabled,
+.ss-btn[aria-disabled='true'] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ss-btn__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-contrast);
+  color: var(--text-on-dark);
+}
+.ss-btn--secondary .ss-btn__icon {
+  background: var(--surface-strong);
+  color: var(--text-primary);
+}
+.ss-spin {
+  animation: ss-spin var(--dur-slow) linear infinite;
+}
+@keyframes ss-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Header (§5.2) */
+.ss-header {
+  position: sticky;
+  top: var(--space-3);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: 56px;
+  padding: 0 var(--space-2) 0 var(--space-5);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: var(--blur);
+  backdrop-filter: var(--blur);
+}
+.ss-header__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.ss-logo-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--space-2);
+  background: var(--text-primary);
+  color: var(--surface-solid);
+  font-size: 14px;
+  font-weight: 600;
+}
+.ss-header__search {
+  flex: 0 1 380px;
+  min-width: 0;
+}
+.ss-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+.ss-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 var(--space-1) 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+}
+.ss-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.ss-search input::placeholder {
+  color: var(--text-secondary);
+}
+.ss-search button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--text-primary);
+  color: var(--text-on-dark);
+}
+.ss-account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 44px;
+  padding: 0 var(--space-1) 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ss-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--swatch-1);
+  color: var(--text-on-dark);
+  font-size: 12px;
+}
+
+/* Tags / chips (§5.5) */
+.ss-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.ss-tag--bordered {
+  border: 1px solid var(--surface-border);
+}
+.ss-tag--hot {
+  color: var(--color-hot);
+}
+.ss-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  height: 28px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Social row (§5.3) */
+.ss-social {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Form primitives (§7) */
+.ss-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.ss-field > label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.ss-input {
+  height: 48px;
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: var(--surface-solid);
+  color: var(--text-primary);
+}
+.ss-input--invalid {
+  border: 2px solid var(--color-danger);
+}
+.ss-error {
+  color: var(--color-danger);
+  font-size: 12px;
+}
+
+/* Footer (§7) */
+.ss-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--card-pad);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.ss-footer__links {
+  display: flex;
+  gap: var(--space-4);
+  margin-left: auto;
+}
+
+/* §8 Mobile: search collapses (opens full-width under the header), tighter
+   header padding. Touch targets stay >= 44x44 (see .ss-icon-btn min size). */
+@media (max-width: 767px) {
+  .ss-header {
+    padding: 0 var(--space-1) 0 var(--space-3);
+  }
+  .ss-header__search {
+    display: none;
+  }
+  .ss-icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+  .ss-account {
+    padding-left: var(--space-3);
+  }
+}

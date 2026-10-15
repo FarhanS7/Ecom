@@ -1,11 +1,14 @@
-// @shopscale/web - Root layout (T007b, tokens T023a). Server component: no
-// secrets here, no client configuration. Design tokens are inlined as CSS
-// before first paint (no flash, no layout shift on theme swap); globals.css
-// consumes them for the base layer.
+// @shopscale/web - Root layout (T007b, tokens T023a, primitives T023b).
+// Server component: no secrets here, no client configuration. Design tokens
+// are inlined as CSS before first paint (no flash, no layout shift on theme
+// swap); the Frame/Header/Footer primitives consume them.
 
 import type { Metadata } from 'next';
 import '@/styles/tokens.css';
+import '@/styles/components.css';
 import './globals.css';
+import { Header } from '@/components/header';
+import { Footer, Frame } from '@/components/ui';
 
 export const metadata: Metadata = {
   title: {
@@ -22,17 +25,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="sr-only" href="#main">
           Skip to content
         </a>
-        <header role="banner">
-          <nav aria-label="Primary">
-            <a href="/" aria-current="page">
-              ShopScale
-            </a>
-          </nav>
-        </header>
-        <main id="main">{children}</main>
-        <footer>
-          <small>ShopScale demo storefront. No real payments are processed.</small>
-        </footer>
+        <Frame>
+          <Header tenantName="ShopScale" />
+          <main id="main">{children}</main>
+          <Footer label="ShopScale" />
+        </Frame>
       </body>
     </html>
   );

@@ -37,6 +37,12 @@ yarn-error.log*
 coverage/
 .nyc_output/
 
+# Playwright artifacts (screenshots are written for human inspection; visual
+# baselines are not committed — see tests/e2e/design-system.spec.ts)
+playwright-report/
+test-results/
+tests/e2e/__screenshots__/
+
 # Database
 *.sqlite
 *.db

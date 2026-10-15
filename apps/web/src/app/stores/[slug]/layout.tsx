@@ -1,7 +1,19 @@
+// Branded storefront layout (T016b, theme injection via tokens T023b). The
+// channel ALWAYS derives from the path on the server; the validated theme is
+// mapped to the allowlisted --store-* variables by tenantThemeStyle (T023a) on
+// a [data-tenant] wrapper, so components read design tokens and swap theme
+// with zero code change. Unknown/suspended slugs and invalid themes 404.
+//
+// Per-tenant chrome (logo/wordmark in the header) needs the route's
+// ChannelContext and lands with T024; here the shell header stays the
+// marketplace's and only the storefront CONTENT is theme-scoped.
+
 import { notFound } from 'next/navigation';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { apiBaseUrl } from '@/lib/api';
 import type { ThemeTokens } from '@shopscale/contracts';
+import { TenantScope } from '@/components/ui';
+import { isValidTheme } from '@/components/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,18 +24,6 @@ interface ChannelBody {
   slug?: string;
   name?: string;
   theme?: ThemeTokens;
-}
-
-function themeVars(theme: ThemeTokens): CSSProperties {
-  return {
-    '--store-primary': theme.primary,
-    '--store-background': theme.background,
-    '--store-surface': theme.surface,
-    '--store-text': theme.text,
-    '--store-muted': theme.muted,
-    '--store-accent': theme.accent,
-    '--store-radius': `${theme.radius}px`,
-  } as CSSProperties;
 }
 
 export default async function StoreLayout({
@@ -43,15 +43,19 @@ export default async function StoreLayout({
   } catch {
     channel = null;
   }
-  if (!channel || channel.channel !== 'store' || !channel.theme) notFound();
+  if (!channel || channel.channel !== 'store' || !channel.theme || !isValidTheme(channel.theme)) {
+    notFound();
+  }
 
   return (
-    <div style={themeVars(channel.theme)} data-testid="store-theme" data-store={channel.slug}>
+    <TenantScope theme={channel.theme} testId="store-theme" dataStore={channel.slug}>
       <p>
         <a href="/">← Marketplace</a>
       </p>
-      <h1 style={{ color: 'var(--store-primary)' }}>{channel.name}</h1>
+      <h1 className="type-display" style={{ color: 'var(--text-primary)' }}>
+        {channel.name}
+      </h1>
       {children}
-    </div>
+    </TenantScope>
   );
 }

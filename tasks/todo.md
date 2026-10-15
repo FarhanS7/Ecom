@@ -42,7 +42,7 @@ All items are not started. This is the sole implementation status checklist; pha
 - [x] [T021: Implement channel-aware catalog reads](items/T021.md) (T021a+T021b; docs/reviews/t021-context.md; spec parked in backend suite per T019 precedent, subtask doc amended)
 - [ ] Checkpoint after T021: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [x] [T022: Add stable keyset pagination](items/T022.md) (T022a+T022b; docs/reviews/t022-context.md; migration 0005-catalog-indexes recorded as drift — indexes already in 0006, no new migration invented; milestone-2-checkpoint-1.md)
-- [ ] [T023: Build the token-based component foundation](items/T023.md)
+- [x] [T023: Build the token-based component foundation](items/T023.md) (T023a+T023b; docs/reviews/t023-context.md; T016 theme contract deliberately not widened — fonts/gradient/swatches need an ADR; Playwright screenshots written but not diffed — pending bench host)
 - [ ] [T024: Build connected storefront home pages](items/T024.md)
 - [ ] Checkpoint after T024: focused tests/build pass, integrated behavior observed, learning questions answered, evidence recorded.
 - [ ] [T025: Build product listing and filters](items/T025.md)

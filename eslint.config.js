@@ -69,6 +69,7 @@ export default tseslint.config(
     // rules (no type-aware rules that need projectService).
     files: [
       '**/*.test.ts',
+      '**/*.test.tsx',
       '**/*.spec.ts',
       'tests/**/*.ts',
       '**/vitest.config.ts',
@@ -78,7 +79,7 @@ export default tseslint.config(
     ],
     extends: [tseslint.configs.recommended],
     languageOptions: {
-      globals: { ...globals.node },
+      globals: { ...globals.node, ...globals.browser },
     },
     rules: {
       'no-debugger': 'error',
