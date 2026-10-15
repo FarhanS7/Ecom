@@ -780,3 +780,211 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ------------------------------------------------------- seller console (T027c)
+   The console is a private working surface, not a storefront: it reuses the
+   card/field primitives but lays them out for reading and editing rather than
+   for browsing, and it keeps every colour on a token. */
+
+.ss-console {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gap);
+}
+.ss-console__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.ss-console__header > h1 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.ss-console__header code {
+  font-size: 12px;
+}
+.ss-console__nav {
+  display: flex;
+  gap: var(--space-4);
+}
+.ss-console__nav a {
+  color: var(--color-brand);
+}
+.ss-console__stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--grid-gap);
+}
+.ss-console__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.ss-console__heading > h2 {
+  margin: 0;
+}
+.ss-console__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--grid-gap);
+}
+.ss-console__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ss-console__item > h3 {
+  margin: 0;
+}
+
+/* Forms ------------------------------------------------------------------ */
+
+.ss-form-card {
+  display: block;
+}
+.ss-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.ss-form--inline {
+  gap: var(--space-3);
+}
+.ss-form > h3,
+.ss-form > h4 {
+  margin: 0;
+}
+.ss-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.ss-form__summary {
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-inner);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-solid);
+}
+.ss-form__summary > p {
+  margin: 0 0 var(--space-2);
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ss-form__summary ul {
+  margin: 0;
+  padding-left: var(--space-5);
+  font-size: 13px;
+}
+.ss-form__summary a {
+  color: var(--text-primary);
+}
+.ss-hint {
+  margin: calc(var(--space-1) * -1) 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.ss-notice {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.ss-textarea {
+  min-height: 84px;
+  padding: var(--space-3);
+  font: inherit;
+  resize: vertical;
+}
+.ss-select {
+  padding-right: var(--space-3);
+}
+.ss-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ss-stack > h3 {
+  margin: 0;
+}
+
+/* Conflict panel --------------------------------------------------------- */
+
+.ss-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-inner);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-solid);
+}
+.ss-conflict__message {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+.ss-conflict__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Badges ----------------------------------------------------------------- */
+
+.ss-badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.ss-badges-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Variant list ----------------------------------------------------------- */
+
+.ss-variants-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.ss-variants-list__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid var(--surface-border);
+  border-radius: var(--radius-inner);
+  background: var(--surface-solid);
+}
+.ss-variants-list__row > .ss-form--inline {
+  flex: 1 1 320px;
+}
+.ss-variants-list__cell {
+  min-width: 120px;
+}
+.ss-variants-list__cell p {
+  margin: 0;
+}
+.ss-variants-list__attributes {
+  flex: 1 1 200px;
+  margin: 0;
+}

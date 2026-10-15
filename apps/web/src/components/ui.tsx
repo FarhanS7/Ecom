@@ -643,6 +643,111 @@ export function TextField({
   );
 }
 
+export interface TextAreaFieldProps {
+  label: string;
+  name: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  required?: boolean | undefined;
+  /** Persistent guidance (an id is generated and wired to the control). */
+  hint?: string | undefined;
+  error?: string | undefined;
+}
+
+/** Multi-line twin of TextField (T027c): same label/error/id contract, so a
+ * form can render either without special-casing accessibility. */
+export function TextAreaField({
+  label,
+  name,
+  value,
+  onChange,
+  rows = 4,
+  required = false,
+  hint,
+  error,
+}: TextAreaFieldProps) {
+  const errorId = `${name}-error`;
+  const hintId = `${name}-hint`;
+  const describedBy =
+    [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined;
+  return (
+    <div className="ss-field">
+      <label htmlFor={name}>{label}</label>
+      {hint ? (
+        <p className="ss-hint" id={hintId}>
+          {hint}
+        </p>
+      ) : null}
+      <textarea
+        id={name}
+        className={`ss-input ss-textarea${error ? ' ss-input--invalid' : ''}`}
+        rows={rows}
+        value={value}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      {error ? (
+        <p className="ss-error" id={errorId} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export interface SelectFieldProps {
+  label: string;
+  name: string;
+  value: string;
+  options: Array<{ value: string; label: string }>;
+  onChange: (value: string) => void;
+  /** Rendered as visible text; only for labels the field itself needs. */
+  hideLabel?: boolean | undefined;
+  error?: string | undefined;
+}
+
+/** Native select: the option list is a closed set decided by the caller. */
+export function SelectField({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+  hideLabel = false,
+  error,
+}: SelectFieldProps) {
+  const errorId = `${name}-error`;
+  return (
+    <div className="ss-field">
+      <label className={hideLabel ? 'sr-only' : undefined} htmlFor={name}>
+        {label}
+      </label>
+      <select
+        id={name}
+        className={`ss-input ss-select${error ? ' ss-input--invalid' : ''}`}
+        value={value}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <p className="ss-error" id={errorId} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------- Footer */
 
 export function Footer({
