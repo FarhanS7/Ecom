@@ -121,8 +121,12 @@ export class ProductController {
     await this.gate(req, storeId);
     if (!UUID_PATTERN.test(productId)) notFound();
     // Same no-oracle rule as stores.controller: bad input ≡ missing scope.
-    const body = rawBody as { expectedVersion?: unknown; title?: unknown; description?: unknown; brand?: unknown; categoryId?: unknown; attributes?: unknown } | null;
+    const body = rawBody as { expectedVersion?: unknown; title?: unknown; description?: unknown; brand?: unknown; categoryId?: unknown; attributes?: unknown; status?: unknown } | null;
     if (!body || typeof body !== 'object' || typeof body.expectedVersion !== 'number') notFound();
+    // Lifecycle transition (T027a): a value outside the contract's enum is
+    // malformed input, so it shares the generic 404 with every other bad field
+    // instead of oracling the product's existence with a 409/422.
+    if (body.status !== undefined && body.status !== 'draft' && body.status !== 'active') notFound();
     const { expectedVersion, ...rest } = body;
     try {
       const updated = await updateProduct({

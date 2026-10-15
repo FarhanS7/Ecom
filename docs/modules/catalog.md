@@ -16,6 +16,8 @@ getPurchasableVariants(channel,variantIds,tx) returns canonical active variants 
 
 Store scope is checked on every nested variant and asset. Prices come from variant records; product minimum price is derived. Slugs are unique within a store, SKU within a store. Category parent updates reject cycles. Public reads recheck store/product/publication status.
 
+Lifecycle (T027a, [ADR-0010](../../docs/decisions/0010-seller-catalog-publishing.md)): `draft → active` requires at least one ACTIVE variant, applied inside the product's versioned write so a refused publish rolls back completely; `archived` is terminal and only reachable through the archive route.
+
 ## Acceptance scenarios
 
 Unlisting a product from marketplace keeps store visibility if enabled. Archive preserves old order snapshots. Concurrent edits with same version produce one success and one conflict. Cursor price ties remain deterministic.

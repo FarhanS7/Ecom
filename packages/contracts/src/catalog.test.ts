@@ -43,4 +43,13 @@ describe('catalog contracts (T020a)', () => {
     expect(publicationToggleRequest.parse({ storeEnabled: false })).toEqual({ storeEnabled: false });
     expect(publicationToggleRequest.safeParse({}).success).toBe(true);
   });
+
+  it('allows only the seller lifecycle transitions on a product patch (T027a)', () => {
+    expect(productUpdateRequest.safeParse({ expectedVersion: 1, status: 'active' }).success).toBe(true);
+    expect(productUpdateRequest.safeParse({ expectedVersion: 1, status: 'draft' }).success).toBe(true);
+    // Archive is terminal and has its own route: it is never an edit.
+    expect(productUpdateRequest.safeParse({ expectedVersion: 1, status: 'archived' }).success).toBe(false);
+    expect(productUpdateRequest.safeParse({ expectedVersion: 1, status: 'ACTIVE' }).success).toBe(false);
+    expect(productUpdateRequest.safeParse({ expectedVersion: 1, status: 1 }).success).toBe(false);
+  });
 });

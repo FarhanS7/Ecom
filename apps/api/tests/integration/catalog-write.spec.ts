@@ -1,8 +1,9 @@
 // T020b seller catalog mutations over real HTTP: scoped permission writes,
 // optimistic version conflicts (two writers, one winner), foreign-store and
 // negative-price rejection, duplicate-SKU conflict, publication flag
-// independence, and archival preserving rows. Needs a REAL database; skips
-// honestly otherwise (CI runs it live).
+// independence, and archival preserving rows. T027a extends the same file with
+// the publish lifecycle (ADR-0010), asserted through PUBLIC reads after each
+// action. Needs a REAL database; skips honestly otherwise (CI runs it live).
 //
 // Uniform no-oracle rule (T018 matrix convention): EVERY scope failure —
 // non-member, member without catalog:manage, foreign product ID, malformed
@@ -63,11 +64,20 @@ afterEach(() => {
 });
 
 /** Catalog fixtures are store-owned: delete BEFORE the world teardown,
- * which removes stores (products.store_id is RESTRICT). */
+ * which removes stores (products.store_id is RESTRICT). Covers both the T020
+ * mutation fixtures and the T027a lifecycle fixture. */
 async function cleanupCatalog(sql: Sql): Promise<void> {
-  await sql.unsafe(`DELETE FROM "product_publications" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "slug" LIKE 't020-%');`);
-  await sql.unsafe(`DELETE FROM "product_variants" WHERE "sku" LIKE 'T020-%';`);
-  await sql.unsafe(`DELETE FROM "products" WHERE "slug" LIKE 't020-%';`);
+  for (const like of ['t020-%', 't027-%']) {
+    await sql.unsafe(
+      `DELETE FROM "product_publications" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "slug" LIKE $1);`,
+      [like],
+    );
+    await sql.unsafe(
+      `DELETE FROM "product_variants" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "slug" LIKE $1);`,
+      [like],
+    );
+    await sql.unsafe(`DELETE FROM "products" WHERE "slug" LIKE $1;`, [like]);
+  }
 }
 
 describe('seller catalog writes (T020b)', () => {
@@ -383,5 +393,162 @@ describe('seller catalog writes (T020b)', () => {
       payload: { expectedVersion: product.version, title: 'Resurrect' },
     });
     expect(stale.statusCode).toBe(409);
+  });
+
+  /**
+   * T027a lifecycle (ADR-0010): the seller scenario from the task's
+   * verification section, asserted through PUBLIC reads after each action.
+   * Draft → (refused publish) → active → store-only → marketplace → unlist →
+   * archive, so the visibility chain is proven rather than assumed.
+   */
+  it('publishes per channel and every public read matches the lifecycle state (T027a)', async () => {
+    if (skipped || !app || !world) return;
+    const slug = 't027-lifecycle-lamp';
+    const sellerPath = `/v1/seller/stores/${world.storeA}/products`;
+    const publicStore = () =>
+      server().inject({ method: 'GET', url: `/v1/catalog/stores/t018-store-a/products/${slug}` });
+    const publicMarket = () =>
+      server().inject({ method: 'GET', url: `/v1/catalog/marketplace/products/${slug}` });
+    const sellerRead = async (id: string) => {
+      const res = await server().inject({ method: 'GET', url: `${sellerPath}/${id}`, headers: authed('ownerA') });
+      expect(res.statusCode).toBe(200);
+      return JSON.parse(res.payload) as { status: string; version: number; minPriceCents: number };
+    };
+
+    await loginAs('ownerA');
+    const created = await server().inject({
+      method: 'POST',
+      url: sellerPath,
+      headers: authed('ownerA'),
+      payload: { categoryId: null, slug, title: 'Lifecycle Lamp' },
+    });
+    expect(created.statusCode).toBe(201);
+    const draft = JSON.parse(created.payload) as { id: string; version: number; status: string };
+    expect(draft.status).toBe('draft');
+
+    // A duplicate slug is an ordinary seller mistake: the scoped unique index
+    // becomes a 409 (same shape as a duplicate SKU), never a constraint 500.
+    const duplicate = await server().inject({
+      method: 'POST',
+      url: sellerPath,
+      headers: authed('ownerA'),
+      payload: { categoryId: null, slug, title: 'Duplicate Lifecycle Lamp' },
+    });
+    expect(duplicate.statusCode).toBe(409);
+    expect(duplicate.payload).not.toMatch(/constraint|duplicate key/i);
+
+    // A draft with no channel enabled is invisible on BOTH channels.
+    expect((await publicStore()).statusCode).toBe(404);
+    expect((await publicMarket()).statusCode).toBe(404);
+
+    // Publishing without an active variant is refused, and the whole write is
+    // rolled back: status AND version are unchanged (no phantom bump).
+    const refused = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}`,
+      headers: authed('ownerA'),
+      payload: { expectedVersion: draft.version, status: 'active' },
+    });
+    expect(refused.statusCode).toBe(409);
+    expect(JSON.parse(refused.payload)).toMatchObject({ status: 409 });
+    const afterRefusal = await sellerRead(draft.id);
+    expect(afterRefusal.status).toBe('draft');
+    expect(afterRefusal.version).toBe(draft.version);
+    expect((await publicStore()).statusCode).toBe(404);
+
+    // An active variant makes publication possible and sets the derived price.
+    const variant = await server().inject({
+      method: 'POST',
+      url: `${sellerPath}/${draft.id}/variants`,
+      headers: authed('ownerA'),
+      payload: { sku: 'T027-LIFE', priceCents: 1850, attributes: { color: 'Black' } },
+    });
+    expect(variant.statusCode).toBe(201);
+    const afterVariant = await sellerRead(draft.id);
+    expect(afterVariant.version).toBeGreaterThan(afterRefusal.version);
+    expect(afterVariant.minPriceCents).toBe(1850);
+
+    // Publish.
+    const published = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}`,
+      headers: authed('ownerA'),
+      payload: { expectedVersion: afterVariant.version, status: 'active' },
+    });
+    expect(published.statusCode).toBe(200);
+    const active = JSON.parse(published.payload) as { status: string; version: number };
+    expect(active.status).toBe('active');
+
+    // Active, but still enabled on no channel: invisible on both.
+    expect((await publicStore()).statusCode).toBe(404);
+    expect((await publicMarket()).statusCode).toBe(404);
+
+    // Opt into the STORE channel: a store-only product.
+    const storeOn = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}/publication`,
+      headers: authed('ownerA'),
+      payload: { storeEnabled: true },
+    });
+    expect(storeOn.statusCode).toBe(200);
+    const storeOnly = JSON.parse(storeOn.payload) as { storeEnabled: boolean; marketplaceEnabled: boolean };
+    expect(storeOnly.storeEnabled).toBe(true);
+    expect(storeOnly.marketplaceEnabled).toBe(false);
+
+    const storeRead = await publicStore();
+    expect(storeRead.statusCode).toBe(200);
+    const storeBody = JSON.parse(storeRead.payload) as { slug: string; priceCents: number };
+    expect(storeBody.slug).toBe(slug);
+    expect(storeBody.priceCents).toBe(1850);
+    expect((await publicMarket()).statusCode).toBe(404);
+
+    // Opt into the marketplace: now visible on both.
+    const marketOn = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}/publication`,
+      headers: authed('ownerA'),
+      payload: { marketplaceEnabled: true },
+    });
+    expect(marketOn.statusCode).toBe(200);
+    expect((await publicMarket()).statusCode).toBe(200);
+
+    // Module acceptance scenario: unlisting from the marketplace keeps the
+    // store visibility that was already on.
+    const marketOff = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}/publication`,
+      headers: authed('ownerA'),
+      payload: { marketplaceEnabled: false },
+    });
+    expect(marketOff.statusCode).toBe(200);
+    const unlisted = JSON.parse(marketOff.payload) as { version: number; storeEnabled: boolean; marketplaceEnabled: boolean };
+    expect(unlisted.storeEnabled).toBe(true);
+    expect(unlisted.marketplaceEnabled).toBe(false);
+    expect((await publicMarket()).statusCode).toBe(404);
+    expect((await publicStore()).statusCode).toBe(200);
+
+    // Archive: invisible on both channels, seller view still readable.
+    const archived = await server().inject({
+      method: 'POST',
+      url: `${sellerPath}/${draft.id}/archive`,
+      headers: authed('ownerA'),
+      payload: { expectedVersion: unlisted.version },
+    });
+    expect(archived.statusCode).toBe(200);
+    expect((await publicMarket()).statusCode).toBe(404);
+    expect((await publicStore()).statusCode).toBe(404);
+    expect((await sellerRead(draft.id)).status).toBe('archived');
+
+    // A status value outside the contract enum is malformed input: generic 404,
+    // and the product is untouched (still archived, same version).
+    const badStatus = await server().inject({
+      method: 'PATCH',
+      url: `${sellerPath}/${draft.id}`,
+      headers: authed('ownerA'),
+      payload: { expectedVersion: unlisted.version + 1, status: 'archived' },
+    });
+    expect(badStatus.statusCode).toBe(404);
+    expect(badStatus.payload).not.toMatch(/status|constraint/i);
+    expect((await sellerRead(draft.id)).version).toBe(unlisted.version + 1);
   });
 });

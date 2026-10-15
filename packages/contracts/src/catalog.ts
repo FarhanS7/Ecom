@@ -31,6 +31,12 @@ export const productUpdateRequest = z.object({
   brand: z.string().max(120).nullable().optional(),
   categoryId: z.string().uuid().nullable().optional(),
   attributes: z.record(z.unknown()).optional(),
+  // Lifecycle transition (T027a / ADR-0010): sellers publish a product by
+  // moving it out of draft. `archived` is deliberately absent — archival is
+  // terminal, preserves order snapshots, and has its own route. Activation
+  // additionally requires at least one active variant (prices come from
+  // variants, so a published product with none would advertise $0).
+  status: z.enum(['draft', 'active']).optional(),
 });
 
 export type ProductUpdateRequest = z.infer<typeof productUpdateRequest>;

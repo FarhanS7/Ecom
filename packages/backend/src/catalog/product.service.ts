@@ -160,21 +160,33 @@ async function readProductScoped(tx: Queryable, storeId: string, productId: stri
 
 export async function createProduct(input: ProductCreateInput, sql: Sql = getDb()): Promise<ProductState> {
   return sql.begin(async (tx) => {
-    const rows = (await tx.unsafe(
-      `INSERT INTO "products" ("store_id","category_id","slug","title","description","brand","attributes","currency")
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-       RETURNING ${PRODUCT_COLUMNS};`,
-      [
-        input.storeId,
-        input.categoryId,
-        input.slug,
-        input.title,
-        input.description,
-        input.brand,
-        JSON.stringify(input.attributes),
-        input.currency,
-      ],
-    )) as unknown as ProductRow[];
+    let rows: ProductRow[];
+    try {
+      rows = (await tx.unsafe(
+        `INSERT INTO "products" ("store_id","category_id","slug","title","description","brand","attributes","currency")
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         RETURNING ${PRODUCT_COLUMNS};`,
+        [
+          input.storeId,
+          input.categoryId,
+          input.slug,
+          input.title,
+          input.description,
+          input.brand,
+          JSON.stringify(input.attributes),
+          input.currency,
+        ],
+      )) as unknown as ProductRow[];
+    } catch (err) {
+      // A duplicate slug is an ordinary seller mistake (T027's console), not a
+      // server fault: map the scoped unique index to the same 409 shape as a
+      // duplicate SKU instead of letting the constraint surface as a 500.
+      const message = err instanceof Error ? err.message : '';
+      if (message.includes('products_store_slug_uniq')) {
+        throw new CatalogError('CONFLICT', 'Slug already exists in this store.');
+      }
+      throw err;
+    }
     const row = rows[0];
     if (!row) throw new Error('Product insert returned no row.');
     await tx.unsafe(`INSERT INTO "product_publications" ("product_id") VALUES ($1);`, [row.id]);
@@ -188,6 +200,7 @@ const UPDATABLE = {
   brand: 'brand',
   categoryId: 'category_id',
   attributes: 'attributes',
+  status: 'status',
 } as const;
 
 export interface ProductPatch {
@@ -196,6 +209,8 @@ export interface ProductPatch {
   brand?: string | null | undefined;
   categoryId?: string | null | undefined;
   attributes?: Record<string, unknown> | undefined;
+  /** Lifecycle transition (T027a): draft <-> active only; archive is its own route. */
+  status?: 'draft' | 'active' | undefined;
 }
 
 /**
@@ -204,6 +219,13 @@ export interface ProductPatch {
  * both collapse to VERSION_CONFLICT/NOT_FOUND by re-reading once.
  */
 export async function updateProduct(input: ProductMutateInput & { patch: ProductPatch }, sql: Sql = getDb()): Promise<ProductState> {
+  const status = input.patch.status;
+  // Defense in depth: the HTTP boundary rejects an unknown status as malformed
+  // input, but the column carries a CHECK constraint — an unvalidated value
+  // would surface as a 500 instead of a typed refusal.
+  if (status !== undefined && status !== 'draft' && status !== 'active') {
+    throw new CatalogError('CONFLICT', 'Invalid product status.');
+  }
   return sql.begin(async (tx) => {
     const sets: string[] = [];
     const values: unknown[] = [input.storeId, input.productId, input.expectedVersion];
@@ -229,8 +251,31 @@ export async function updateProduct(input: ProductMutateInput & { patch: Product
       await readProductScoped(tx, input.storeId, input.productId); // throws NOT_FOUND if gone
       throw new CatalogError('VERSION_CONFLICT', 'Product was modified by another writer.');
     }
+    // Activation precondition runs AFTER the versioned UPDATE: scope and version
+    // are already proven (a foreign product failed above), and a refusal here
+    // rolls the whole transaction back, so no version bump survives a rejected
+    // publish.
+    if (status === 'active') await assertHasActiveVariant(tx, input.storeId, input.productId);
+    // A status change can change which variants count toward the derived price.
+    if (status !== undefined) await refreshMinPrice(tx, input.storeId, input.productId);
     return readProductScoped(tx, input.storeId, input.productId);
   });
+}
+
+/**
+ * Activation precondition (T027a / ADR-0010): a published product must have at
+ * least one ACTIVE variant, because prices and the derived minimum come from
+ * variant records — publishing without one would advertise a $0 product.
+ */
+async function assertHasActiveVariant(tx: Queryable, storeId: string, productId: string): Promise<void> {
+  const rows = (await tx.unsafe(
+    `SELECT 1 FROM "product_variants"
+     WHERE "store_id" = $1 AND "product_id" = $2 AND "status" = 'active' LIMIT 1;`,
+    [storeId, productId],
+  )) as unknown as unknown[];
+  if (rows.length === 0) {
+    throw new CatalogError('CONFLICT', 'Add an active variant before publishing this product.');
+  }
 }
 
 /** Archive: status flip + version bump; rows/variants stay (RESTRICT). */
