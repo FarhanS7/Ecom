@@ -23,6 +23,39 @@ describe('gateway allowlist (T017a)', () => {
     });
     expect(resolveGatewayTarget(['v1', 'me', 'addresses', '..'])).toEqual({ ok: false, reason: 'traversal' });
   });
+
+  it('proxies the public catalog READS by exact template shape (T025a)', () => {
+    expect(resolveGatewayTarget(['v1', 'catalog', 'marketplace', 'products'])).toEqual({
+      ok: true,
+      path: 'v1/catalog/marketplace/products',
+    });
+    expect(resolveGatewayTarget(['v1', 'catalog', 'stores', 't016-alpha', 'products'])).toEqual({
+      ok: true,
+      path: 'v1/catalog/stores/t016-alpha/products',
+    });
+    // Deeper, shallower, or sibling shapes stay out.
+    expect(resolveGatewayTarget(['v1', 'catalog', 'marketplace', 'products', 'x'])).toEqual({
+      ok: false,
+      reason: 'not allowlisted',
+    });
+    expect(resolveGatewayTarget(['v1', 'catalog', 'stores', 't016-alpha'])).toEqual({
+      ok: false,
+      reason: 'not allowlisted',
+    });
+    expect(resolveGatewayTarget(['v1', 'catalog', 'admin', 'products'])).toEqual({
+      ok: false,
+      reason: 'not allowlisted',
+    });
+    // Writes are never proxied through the read templates.
+    expect(resolveGatewayTarget(['v1', 'catalog', 'stores', 't016-alpha', 'products', 'p1'])).toEqual({
+      ok: false,
+      reason: 'not allowlisted',
+    });
+    expect(resolveGatewayTarget(['v1', 'catalog', 'stores', '..', 'products'])).toEqual({
+      ok: false,
+      reason: 'traversal',
+    });
+  });
 });
 
 describe('session cookie filtering (T017a)', () => {

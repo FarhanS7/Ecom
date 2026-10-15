@@ -36,6 +36,18 @@ export type AllowedGatewayPath = (typeof ALLOWED_GATEWAY_PATHS)[number];
  */
 export const ALLOWED_GATEWAY_PREFIXES = ['v1/me/addresses'] as const;
 
+/**
+ * Path TEMPLATES for deep routes (T025a): each segment is either literal or a
+ * `{name}` placeholder, and per-segment validation already rejected traversal,
+ * absolute URLs, and illegal characters. Depth and shape are exact, so
+ * `v1/catalog/stores/x/products/extra` and `v1/catalog/admin/products` stay
+ * rejected — the browser can only reach the public catalog READS it needs.
+ */
+export const ALLOWED_GATEWAY_TEMPLATES = [
+  'v1/catalog/marketplace/products',
+  'v1/catalog/stores/{slug}/products',
+] as const;
+
 /** Server-only API origin. Names the variable on failure, never its value. */
 export function apiBaseUrl(): string {
   const value = process.env['API_BASE_URL'];
@@ -80,7 +92,21 @@ export function resolveGatewayTarget(
       return { ok: true, path: joined };
     }
   }
+  for (const template of ALLOWED_GATEWAY_TEMPLATES) {
+    if (matchesTemplate(template, decoded)) return { ok: true, path: joined };
+  }
   return { ok: false, reason: 'not allowlisted' };
+}
+
+/** Exact-shape template match: same depth, literals equal, placeholders free. */
+function matchesTemplate(template: string, decoded: string[]): boolean {
+  const parts = template.split('/');
+  if (parts.length !== decoded.length) return false;
+  return parts.every((part, index) => {
+    const segment = decoded[index] as string;
+    if (part.startsWith('{') && part.endsWith('}')) return segment.length > 0;
+    return part === segment;
+  });
 }
 
 /** Resolve or mint the request ID to forward upstream. */
