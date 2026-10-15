@@ -17,6 +17,7 @@
     "db:generate": "pnpm --filter=@shopscale/backend run db:generate",
     "db:migrate": "pnpm --filter=@shopscale/backend run db:migrate",
     "db:seed": "pnpm --filter=@shopscale/backend run db:seed",
+    "seed": "pnpm --filter=@shopscale/backend run db:seed --",
     "infra:up": "node scripts/dev-infra.mjs up",
     "infra:jobs": "node scripts/dev-infra.mjs jobs",
     "infra:ps": "node scripts/dev-infra.mjs ps",
