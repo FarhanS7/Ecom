@@ -3,17 +3,18 @@
 // SQL WHERE shape proven live by catalog-visibility.spec.ts (CI).
 
 import { describe, expect, it } from 'vitest';
-import { CATALOG_SORTS, SORT_FRAGMENTS } from './read.service.js';
+import { CATALOG_SORTS } from './cursor.js';
+import { ORDER_FRAGMENTS } from './list-query.js';
 import { channelListQuery } from '@shopscale/contracts';
 
 describe('catalog sort map (T021a)', () => {
   it('maps every declared sort to a deterministic, id-tiebroken fragment', () => {
     for (const sort of CATALOG_SORTS) {
-      const fragment = SORT_FRAGMENTS[sort];
+      const fragment = ORDER_FRAGMENTS[sort];
       expect(fragment).toBeTruthy();
       expect(fragment).toContain('"p"."id"'); // total order — no pagination ties
     }
-    expect(CATALOG_SORTS).toHaveLength(Object.keys(SORT_FRAGMENTS).length);
+    expect(CATALOG_SORTS).toHaveLength(Object.keys(ORDER_FRAGMENTS).length);
   });
 });
 

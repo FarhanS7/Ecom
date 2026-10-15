@@ -1,33 +1,23 @@
 // @shopscale/backend/catalog/read.service - Channel-aware public reads
-// (T021a). Every read RECHECKS the full visibility chain IN SQL:
-// business active → store active → product status → channel publication
-// flag. No cached projection, no trust in write-time state (module
-// invariant: "Public reads recheck store/product/publication status").
+// (T021a, keyset pagination T022b). Every read RECHECKS the full
+// visibility chain IN SQL (business active → store active → product
+// status → channel publication flag) via the single WHERE shape owned by
+// list-query.ts. No cached projection, no trust in write-time state.
 //
-// Marketplace sees marketplace_enabled products from active stores in
-// active businesses; the store channel additionally pins store_id to the
-// resolved slug. Unpublished, draft, archived, and suspended-store rows
-// are INVISIBLE — list and detail share one WHERE shape, so a detail
-// 404 can never be distinguished from an unknown slug by an outsider.
-//
-// Sorts are a closed set of deterministic fragments, each tiebroken by
-// id (T022 layers keyset cursors on the same orderings).
+// List pagination is keyset-based: the query fetches limit+1 rows and the
+// next cursor is derived from the last RETURNED row's sort tuple, so pages
+// never overlap and never skip on a fixed dataset. Detail shares the same
+// visibility WHERE, so a detail 404 is indistinguishable from an unknown
+// slug to an outsider.
 
 import type { Sql } from 'postgres';
 import { getDb } from '../db/client.js';
+import { CATALOG_SORTS, encodeCursor, filterFingerprint } from './cursor.js';
+import type { CatalogChannel, CatalogSort } from './cursor.js';
+import { VISIBILITY_WHERE, buildListQuery, cursorTupleForRow, visibilityArgs } from './list-query.js';
 
-export type CatalogChannel = 'marketplace' | 'store';
-export type CatalogSort = 'newest' | 'price_asc' | 'price_desc' | 'popularity';
-
-export const CATALOG_SORTS: readonly CatalogSort[] = ['newest', 'price_asc', 'price_desc', 'popularity'];
-
-/** Pure: closed sort → SQL fragment map (id tiebreak keeps order total). */
-export const SORT_FRAGMENTS: Record<CatalogSort, string> = {
-  newest: `"p"."created_at" DESC, "p"."id" DESC`,
-  price_asc: `"p"."min_price_cents" ASC, "p"."id" ASC`,
-  price_desc: `"p"."min_price_cents" DESC, "p"."id" DESC`,
-  popularity: `"p"."sales_count" DESC, "p"."id" DESC`,
-};
+export { CATALOG_SORTS };
+export type { CatalogChannel, CatalogSort };
 
 export interface ChannelProductSummary {
   id: string;
@@ -56,6 +46,8 @@ export interface ChannelListQuery {
   maxPriceCents?: number | undefined;
   sort?: CatalogSort | undefined;
   limit?: number | undefined;
+  /** Opaque keyset cursor from a previous page's `nextCursor`. */
+  cursor?: string | undefined;
 }
 
 interface SummaryRow {
@@ -66,6 +58,8 @@ interface SummaryRow {
   min_price_cents: string | number;
   currency: string;
   rating_count: number;
+  created_at: Date;
+  sales_count: number;
 }
 
 interface DetailRow extends SummaryRow {
@@ -74,39 +68,6 @@ interface DetailRow extends SummaryRow {
   status: string;
   store_slug: string;
   store_name: string;
-}
-
-/**
- * Visibility WHERE shared by list and detail. Parameters:
- * $1 channel ('marketplace'|'store'), $2 storeSlug ('' for marketplace),
- * $3 categorySlug ('' = any), $4 minPrice (-1 = any), $5 maxPrice
- * (-1 = any), $6 productSlug ('' = list all).
- */
-const VISIBILITY_WHERE = `
-  FROM "products" p
-  JOIN "stores" s ON s."id" = p."store_id"
-  JOIN "businesses" b ON b."id" = s."business_id"
-  JOIN "product_publications" pub ON pub."product_id" = p."id"
-  LEFT JOIN "categories" c ON c."id" = p."category_id"
-  WHERE b."status" = 'active'
-    AND s."status" = 'active'
-    AND p."status" = 'active'
-    AND (($1 = 'marketplace' AND pub."marketplace_enabled" = true)
-         OR ($1 = 'store' AND pub."store_enabled" = true AND s."slug" = $2))
-    AND ($3 = '' OR c."slug" = $3)
-    AND ($4 = -1 OR p."min_price_cents" >= $4)
-    AND ($5 = -1 OR p."min_price_cents" <= $5)
-    AND ($6 = '' OR p."slug" = $6)`;
-
-function bindArgs(query: ChannelListQuery, productSlug = ''): unknown[] {
-  return [
-    query.channel,
-    query.storeSlug ?? '',
-    query.categorySlug ?? '',
-    query.minPriceCents ?? -1,
-    query.maxPriceCents ?? -1,
-    productSlug,
-  ];
 }
 
 function toSummary(row: SummaryRow): ChannelProductSummary {
@@ -122,30 +83,36 @@ function toSummary(row: SummaryRow): ChannelProductSummary {
 }
 
 /**
- * Public list. `limit` caps rows (default 20, hard max 100); `nextCursor`
- * is always null until T022 adds keyset pagination — the DTO shape is
- * final now so clients do not churn.
+ * Public list with keyset pagination. `limit` caps rows (default 20, hard
+ * max 100). `nextCursor` is null on the last page; otherwise it encodes the
+ * last returned row's (sort value, id) under a channel+filter fingerprint,
+ * so it cannot be replayed against a different query.
  */
 export async function listChannelProducts(
   query: ChannelListQuery,
   sql: Sql = getDb(),
-): Promise<{ items: ChannelProductSummary[]; nextCursor: null }> {
-  const limit = Math.min(Math.max(query.limit ?? 20, 1), 100);
-  const fragment = SORT_FRAGMENTS[query.sort ?? 'newest'];
-  const rows = (await sql.unsafe(
-    `SELECT "p"."id","p"."slug","p"."title","p"."brand","p"."min_price_cents","p"."currency","p"."rating_count"
-     ${VISIBILITY_WHERE}
-     ORDER BY ${fragment}
-     LIMIT ${limit};`,
-    bindArgs(query) as never[],
-  )) as unknown as SummaryRow[];
-  return { items: rows.map(toSummary), nextCursor: null };
+): Promise<{ items: ChannelProductSummary[]; nextCursor: string | null }> {
+  const built = buildListQuery(query);
+  const rows = (await sql.unsafe(built.text, built.args as never[])) as unknown as SummaryRow[];
+  const page = rows.slice(0, built.limit);
+  const hasMore = rows.length > built.limit;
+  const last = page[page.length - 1];
+  const nextCursor =
+    hasMore && last
+      ? encodeCursor({
+          v: 1,
+          sort: built.sort,
+          f: filterFingerprint(query),
+          k: cursorTupleForRow(built.sort, last as unknown as Record<string, unknown>),
+        })
+      : null;
+  return { items: page.map(toSummary), nextCursor };
 }
 
 /**
  * Public detail. Unknown slug, unpublished product, draft/archived row,
- * suspended store, and malformed input ALL return null — one outcome,
- * no oracle.
+ * suspended store, and malformed input ALL return null — one outcome, no
+ * oracle.
  */
 export async function getChannelProduct(
   query: ChannelListQuery & { productSlug: string },
@@ -153,11 +120,11 @@ export async function getChannelProduct(
 ): Promise<ChannelProductDetail | null> {
   const rows = (await sql.unsafe(
     `SELECT "p"."id","p"."slug","p"."title","p"."brand","p"."min_price_cents","p"."currency",
-            "p"."rating_count","p"."description","p"."attributes","p"."status",
+            "p"."rating_count","p"."created_at","p"."sales_count","p"."description","p"."attributes","p"."status",
             "s"."slug" AS "store_slug","s"."name" AS "store_name"
      ${VISIBILITY_WHERE}
      LIMIT 1;`,
-    bindArgs(query, query.productSlug) as never[],
+    visibilityArgs(query, query.productSlug) as never[],
   )) as unknown as DetailRow[];
   const row = rows[0];
   if (!row) return null;
