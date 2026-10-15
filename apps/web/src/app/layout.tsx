@@ -1,7 +1,10 @@
-// @shopscale/web - Root layout (T007b). Server component: no secrets here,
-// no client configuration. Theme tokens load via globals.css before paint.
+// @shopscale/web - Root layout (T007b, tokens T023a). Server component: no
+// secrets here, no client configuration. Design tokens are inlined as CSS
+// before first paint (no flash, no layout shift on theme swap); globals.css
+// consumes them for the base layer.
 
 import type { Metadata } from 'next';
+import '@/styles/tokens.css';
 import './globals.css';
 
 export const metadata: Metadata = {
