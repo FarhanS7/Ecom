@@ -186,14 +186,39 @@ export function clearFilters(_state: ListQueryState): ListQueryState {
  * every request built from this function is channel-scoped by construction.
  */
 export function listApiPath(channel: ListChannel): string {
+  return `/api${listUpstreamPath(channel)}`;
+}
+
+/**
+ * Upstream (API-origin) path for the channel listing — the single mapping the
+ * gateway path is derived from, and the base every product path builds on. A
+ * store channel with a missing/empty slug THROWS: falling back to the
+ * marketplace endpoint would leak marketplace rows into a store page.
+ */
+export function listUpstreamPath(channel: ListChannel): string {
   if (channel.kind === 'store') {
     const slug = channel.slug?.trim() ?? '';
     if (slug === '') {
       throw new Error('Store channel requires a non-empty slug for a catalog request.');
     }
-    return `/api/v1/catalog/stores/${encodeURIComponent(slug)}/products`;
+    return `/v1/catalog/stores/${encodeURIComponent(slug)}/products`;
   }
-  return '/api/v1/catalog/marketplace/products';
+  return '/v1/catalog/marketplace/products';
+}
+
+/** The API's own product-slug shape (catalog.controller.ts); fail fast on junk. */
+export const PRODUCT_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Upstream path for ONE product's detail read (T026a). Server-only in practice:
+ * the PDP is rendered on the server, so no gateway template is added for it.
+ */
+export function productUpstreamPath(channel: ListChannel, productSlug: string): string {
+  const slug = productSlug?.trim() ?? '';
+  if (!PRODUCT_SLUG_PATTERN.test(slug)) {
+    throw new Error('A product slug is required for a catalog detail request.');
+  }
+  return `${listUpstreamPath(channel)}/${encodeURIComponent(slug)}`;
 }
 
 /**

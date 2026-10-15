@@ -11,9 +11,11 @@ import {
   listApiPath,
   listHref,
   listRequestUrl,
+  listUpstreamPath,
   pageNumber,
   parseListQuery,
   popCursor,
+  productUpstreamPath,
   pushCursor,
   serializeListQuery,
   toApiSearchParams,
@@ -157,6 +159,33 @@ describe('the only place a channel becomes a request (T025a)', () => {
     expect(listRequestUrl({ kind: 'store', slug: 'alpha' }, parse(''))).toBe(
       '/api/v1/catalog/stores/alpha/products?sort=newest&limit=12',
     );
+  });
+});
+
+describe('detail paths stay channel-scoped (T026a)', () => {
+  it('derives the gateway and upstream listing paths from one mapping', () => {
+    expect(listUpstreamPath({ kind: 'marketplace' })).toBe('/v1/catalog/marketplace/products');
+    expect(listApiPath({ kind: 'marketplace' })).toBe('/api/v1/catalog/marketplace/products');
+    expect(listUpstreamPath({ kind: 'store', slug: 'alpha' })).toBe('/v1/catalog/stores/alpha/products');
+    expect(listApiPath({ kind: 'store', slug: 'alpha' })).toBe('/api/v1/catalog/stores/alpha/products');
+    expect(() => listUpstreamPath({ kind: 'store', slug: ' ' })).toThrow(/non-empty slug/);
+  });
+
+  it('builds a product detail path under its channel and refuses junk slugs', () => {
+    expect(productUpstreamPath({ kind: 'marketplace' }, 'x-bud')).toBe(
+      '/v1/catalog/marketplace/products/x-bud',
+    );
+    expect(productUpstreamPath({ kind: 'store', slug: 'alpha' }, 'x-bud')).toBe(
+      '/v1/catalog/stores/alpha/products/x-bud',
+    );
+    // Two stores can never resolve to the same detail URL (no cross-store reuse).
+    expect(productUpstreamPath({ kind: 'store', slug: 'alpha' }, 'x')).not.toBe(
+      productUpstreamPath({ kind: 'store', slug: 'beta' }, 'x'),
+    );
+    expect(() => productUpstreamPath({ kind: 'store', slug: '' }, 'x')).toThrow(/non-empty slug/);
+    for (const bad of ['', '  ', 'X-Bud', 'a_b', 'a/b', 'a b', '-lead', 'trail-']) {
+      expect(() => productUpstreamPath({ kind: 'marketplace' }, bad)).toThrow(/product slug/);
+    }
   });
 });
 
