@@ -245,6 +245,17 @@ export function listRequestUrl(channel: ListChannel, state: ListQueryState): str
 }
 
 /**
+ * Page path for a channel's listing, optionally for one product — the mirror
+ * of the API path builder, so a link and its request can never disagree about
+ * the channel. `null` (or an empty slug) means the marketplace.
+ */
+export function productPagePath(storeSlug: string | null, productSlug?: string): string {
+  const trimmed = storeSlug?.trim() ?? '';
+  const base = trimmed === '' ? '/products' : `/stores/${encodeURIComponent(trimmed)}/products`;
+  return productSlug === undefined ? base : `${base}/${encodeURIComponent(productSlug)}`;
+}
+
+/**
  * Stale-response guard (T025b): every request takes a token, and only the
  * newest token is allowed to commit its result. A slow older response can
  * therefore never overwrite a newer selection — even if `AbortController` is

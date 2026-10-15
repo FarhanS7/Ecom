@@ -343,6 +343,8 @@ export interface ActionButtonProps {
   variant?: 'primary' | 'secondary';
   disabled?: boolean | undefined;
   loading?: boolean | undefined;
+  /** id of the element explaining a disabled/blocked action (T026b). */
+  describedBy?: string | undefined;
   className?: string | undefined;
 }
 
@@ -354,6 +356,7 @@ export function ActionButton({
   variant = 'primary',
   disabled = false,
   loading = false,
+  describedBy,
   className,
 }: ActionButtonProps) {
   const busy = loading || disabled;
@@ -375,6 +378,7 @@ export function ActionButton({
         href={href}
         aria-disabled={busy}
         aria-busy={loading}
+        aria-describedby={describedBy}
         onClick={busy ? (e) => e.preventDefault() : onClick}
         tabIndex={busy ? -1 : undefined}
       >
@@ -389,6 +393,7 @@ export function ActionButton({
       onClick={onClick}
       disabled={busy}
       aria-busy={loading}
+      aria-describedby={describedBy}
     >
       {inner}
     </button>

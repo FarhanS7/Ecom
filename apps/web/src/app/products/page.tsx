@@ -9,6 +9,7 @@ import type { Metadata } from 'next';
 import { Card } from '@/components/ui';
 import { FilterPanel } from '@/features/catalog/filter-panel';
 import { ProductList } from '@/features/catalog/product-list';
+import { productPagePath } from '@/features/catalog/query-state';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default function ProductsPage() {
+  const basePath = productPagePath(null);
   return (
     <section aria-labelledby="plp-heading">
       <h1 id="plp-heading" className="type-display ss-plp-title">
@@ -33,7 +35,7 @@ export default function ProductsPage() {
         }
       >
         <div className="ss-plp">
-          <FilterPanel basePath="/products" />
+          <FilterPanel basePath={basePath} />
           <ProductList />
         </div>
       </Suspense>

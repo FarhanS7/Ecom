@@ -15,6 +15,7 @@ import {
   pageNumber,
   parseListQuery,
   popCursor,
+  productPagePath,
   productUpstreamPath,
   pushCursor,
   serializeListQuery,
@@ -186,6 +187,28 @@ describe('detail paths stay channel-scoped (T026a)', () => {
     for (const bad of ['', '  ', 'X-Bud', 'a_b', 'a/b', 'a b', '-lead', 'trail-']) {
       expect(() => productUpstreamPath({ kind: 'marketplace' }, bad)).toThrow(/product slug/);
     }
+  });
+});
+
+describe('page paths mirror the request paths (T026b)', () => {
+  it('builds listing and product paths per channel', () => {
+    expect(productPagePath(null)).toBe('/products');
+    expect(productPagePath(null, 'x-bud')).toBe('/products/x-bud');
+    expect(productPagePath('alpha')).toBe('/stores/alpha/products');
+    expect(productPagePath('alpha', 'x-bud')).toBe('/stores/alpha/products/x-bud');
+    // An empty/blank slug degrades to the marketplace rather than half a path.
+    expect(productPagePath('')).toBe('/products');
+    expect(productPagePath('  ', 'x-bud')).toBe('/products/x-bud');
+  });
+
+  it('agrees with the request path about the channel', () => {
+    const page = productPagePath('alpha', 'x-bud');
+    const upstream = productUpstreamPath({ kind: 'store', slug: 'alpha' }, 'x-bud');
+    expect(page).toBe('/stores/alpha/products/x-bud');
+    expect(upstream).toBe('/v1/catalog/stores/alpha/products/x-bud');
+    // Same channel segment, different origin: the link cannot point at another
+    // store's channel than the request that filled it.
+    expect(upstream.endsWith(page)).toBe(true);
   });
 });
 

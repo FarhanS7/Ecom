@@ -12,7 +12,7 @@ vi.mock('react', async (importOriginal) => {
   return { ...actual, cache: (fn: unknown) => fn };
 });
 
-import { loadProductDetail, productBasePath } from '@/features/catalog/load';
+import { loadProductDetail } from '@/features/catalog/load';
 
 const ID = '11111111-1111-4111-8111-111111111111';
 const VARIANT_ID = '22222222-2222-4222-8222-222222222222';
@@ -96,9 +96,21 @@ describe('channel-scoped detail reads (T026a)', () => {
     expect(requestedUrl(0)).not.toBe(requestedUrl(1));
   });
 
-  it('mirrors the channel in the link base path', () => {
-    expect(productBasePath(null)).toBe('/products');
-    expect(productBasePath('alpha')).toBe('/stores/alpha/products');
+  it('refuses a product that belongs to another store', async () => {
+    // Boundary assertion for "product scope matches route": the API filters by
+    // store, but a mismatch must never render another store's product.
+    fetchMock.mockResolvedValue(
+      jsonResponse(detailBody({ store: { slug: 'other-store', name: 'Other' } })),
+    );
+    expect(await loadProductDetail('t016-alpha', 'x-bud')).toEqual({ status: 'not-found' });
+  });
+
+  it('accepts any store on the marketplace channel', async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(detailBody({ store: { slug: 'other-store', name: 'Other' } })),
+    );
+    const result = await loadProductDetail(null, 'x-bud');
+    expect(result.status).toBe('ok');
   });
 });
 

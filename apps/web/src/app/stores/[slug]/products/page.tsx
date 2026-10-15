@@ -8,6 +8,7 @@ import { notFound } from 'next/navigation';
 import { Card } from '@/components/ui';
 import { FilterPanel } from '@/features/catalog/filter-panel';
 import { ProductList } from '@/features/catalog/product-list';
+import { productPagePath } from '@/features/catalog/query-state';
 import { loadStoreChannel } from '@/features/storefront/load';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default async function StoreProductsPage({ params }: { params: { slug: st
   const channel = await loadStoreChannel(params.slug);
   if (!channel) notFound();
 
-  const basePath = `/stores/${channel.slug}/products`;
+  const basePath = productPagePath(channel.slug);
 
   return (
     <section aria-labelledby="plp-heading">

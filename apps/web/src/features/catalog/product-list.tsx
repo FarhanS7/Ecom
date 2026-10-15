@@ -25,6 +25,7 @@ import {
   pageNumber,
   parseListQuery,
   popCursor,
+  productPagePath,
   pushCursor,
   type ListChannel,
 } from '@/features/catalog/query-state';
@@ -48,7 +49,7 @@ type Result =
 
 /** Channel listing base path — the mirror of `listApiPath`, for navigation. */
 export function productListBasePath(storeSlug?: string): string {
-  return storeSlug ? `/stores/${storeSlug}/products` : '/products';
+  return productPagePath(storeSlug ?? null);
 }
 
 export interface ProductListProps {

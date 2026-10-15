@@ -32,9 +32,9 @@ const DETAIL_TIMEOUT_MS = 5000;
  * page can become store-scoped, and the reason a store can never render the
  * marketplace's copy of a slug.
  *
- * React `cache()` is keyed on the primitive arguments, so two callers in the
- * SAME request (page + metadata) share one fetch, while a different store or
- * product is a different key.
+ * React `cache()` is keyed on the primitive arguments, so the marketplace,
+ * store A, and store B are always three different cache nodes; a second caller
+ * in the same request (the page and its metadata) resolves to the same node.
  */
 export const loadProductDetail = cache(
   async (storeSlug: string | null, productSlug: string): Promise<ProductDetailResult> => {
@@ -59,14 +59,16 @@ export const loadProductDetail = cache(
       if (!response.ok) return { status: 'unavailable' };
       const parsed = channelProductDetail.safeParse(await response.json());
       if (!parsed.success) return { status: 'unavailable' };
+      // "Product scope matches route": a store-scoped read must never render a
+      // product that belongs to another store. The API already filters by store
+      // slug, so this is a boundary assertion, not a fallback — a mismatch is a
+      // not-found rather than a page that leaks the wrong store's product.
+      if (storeSlug !== null && parsed.data.store.slug !== storeSlug) {
+        return { status: 'not-found' };
+      }
       return { status: 'ok', product: parsed.data };
     } catch {
       return { status: 'unavailable' };
     }
   },
 );
-
-/** Channel PDP base path — the mirror of `productUpstreamPath`, for links. */
-export function productBasePath(storeSlug: string | null): string {
-  return storeSlug === null ? '/products' : `/stores/${storeSlug}/products`;
-}
