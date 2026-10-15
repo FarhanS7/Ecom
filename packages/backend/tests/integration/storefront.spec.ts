@@ -62,8 +62,11 @@ async function seed(sql: NonNullable<Awaited<ReturnType<typeof connectOrSkip>>>)
     )) as Array<{ id: string }>;
     const storeId = store[0]?.id as string;
     if (tokens !== null) {
-      await sql.unsafe(`INSERT INTO "store_themes" ("store_id","approved_tokens") VALUES ($1,$2) ON CONFLICT DO NOTHING;`, [
+      await sql.unsafe(`INSERT INTO "store_themes" ("store_id","approved_tokens") VALUES ($1,$2::text::jsonb) ON CONFLICT DO NOTHING;`, [
         storeId,
+        // Serialized here and parsed by the database: an uncast parameter against a
+        // jsonb column would be double-encoded into a JSON string, which the theme
+        // contract then rejects and the storefront falls back to the default theme.
         JSON.stringify(tokens),
       ]);
     }

@@ -118,9 +118,16 @@ describe('migration harness (T003)', () => {
           "created_at" timestamptz NOT NULL DEFAULT now()
         );
       `);
-      const { applied } = await runMigrations(sql, migrationsDir);
-      // Harness adopts the existing table and records the file exactly once.
-      expect(applied.length).toBeLessThanOrEqual(1);
+      // Dropping the tracking table means the harness has no memory of what ran, so
+      // every migration file re-applies — which is only safe because they are
+      // idempotent, and that is worth asserting. The "recorded exactly once"
+      // property shows up on the run AFTER that: nothing applies, everything skips.
+      const first = await runMigrations(sql, migrationsDir);
+      expect(first.applied.length).toBeGreaterThan(0);
+      expect(first.skipped).toEqual([]);
+      const second = await runMigrations(sql, migrationsDir);
+      expect(second.applied).toEqual([]);
+      expect(second.skipped.length).toBe(first.applied.length);
       const rows = await sql.unsafe('SELECT count(*)::int AS n FROM "migration_probe";');
       expect((rows as Array<{ n: number }>)[0].n).toBeGreaterThanOrEqual(1);
     } finally {

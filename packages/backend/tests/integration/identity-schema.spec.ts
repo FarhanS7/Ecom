@@ -174,15 +174,43 @@ describe('identity schema (T009)', () => {
       }>;
       expect(roles.map((r) => r.key).sort()).toEqual(['admin', 'customer', 'seller', 'support']);
 
-      const perms = (await sql.unsafe(`SELECT count(*)::int AS n FROM "permissions";`)) as Array<{
-        n: number;
+      // T009 owns the foundation permission set; T010 (stores) legitimately
+      // extended it, so asserting a total would encode another task's decisions and
+      // go stale. Assert the keys this task owns, plus the invariant that the admin
+      // role is granted everything that exists.
+      const perms = (await sql.unsafe(`SELECT "key" FROM "permissions" ORDER BY "key";`)) as Array<{
+        key: string;
       }>;
-      expect(perms[0].n).toBe(7);
+      expect(perms.map((p) => p.key)).toEqual(
+        expect.arrayContaining([
+          'product:update',
+          'order:read',
+          'order:refund',
+          'seller:approve',
+          'audit:read',
+          'role:manage',
+          'customer:read',
+        ]),
+      );
 
       const adminPerms = (await sql.unsafe(
-        `SELECT count(*)::int AS n FROM "platform_role_permissions" pr JOIN "platform_roles" r ON r."id" = pr."role_id" WHERE r."key" = 'admin';`,
-      )) as Array<{ n: number }>;
-      expect(adminPerms[0].n).toBe(7);
+        `SELECT p."key" FROM "platform_role_permissions" pr
+           JOIN "platform_roles" r ON r."id" = pr."role_id"
+           JOIN "permissions" p ON p."id" = pr."permission_id"
+          WHERE r."key" = 'admin' ORDER BY p."key";`,
+      )) as Array<{ key: string }>;
+      // Platform admin holds the platform foundation set. The five permissions T010
+      // added are granted through store roles (store_role_permissions), which is a
+      // different table, so a total-count assertion conflated the two.
+      expect(adminPerms.map((p) => p.key)).toEqual([
+        'audit:read',
+        'customer:read',
+        'order:read',
+        'order:refund',
+        'product:update',
+        'role:manage',
+        'seller:approve',
+      ]);
 
       const customerPerms = (await sql.unsafe(
         `SELECT count(*)::int AS n FROM "platform_role_permissions" pr JOIN "platform_roles" r ON r."id" = pr."role_id" WHERE r."key" = 'customer';`,
