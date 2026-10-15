@@ -42,3 +42,22 @@ suites via package configs. Playwright runs against the configured test server
 and seed; it must not mutate a production host.
 
 At T002/T008, add and test all initial package script definitions plus test-runner include/exclude rules. Later task completion requires its command to exist and be documented here. The exact implementation command and output go in evidence, not a retroactive claim that today's plan was executed.
+
+### Seed workflow (T028)
+
+`pnpm seed --size s --seed 42` is idempotent **per seed**: ids are name-addressed
+(not sequence-addressed), so a second run of the same seed inserts zero rows and
+`pnpm seed:verify` reports the same checksum. `--size=s`, `SIZE=`/`SEED=` env
+fallbacks are accepted; `--seed` defaults to 42.
+
+Only Tier S is implemented. `--size m|l|xl` is refused by name before any
+connection (T077 owns the streaming bulk tiers), and `NODE_ENV=production` is
+refused unless `SEED_FORCE=1`.
+
+Changing the seed against a database that already holds a different seed leaves a
+**hybrid**: product ids are name-addressed and therefore identical (no product row
+is replaced), while variant prices and skus differ (new variant rows are inserted).
+`seed:verify` detects this and exits non-zero with a derived-price mismatch, e.g.
+`65 seeded product(s) disagree with min(active variant price)`. Change the seed on a
+clean or isolated database, and treat `seed:verify` as the check that the data is
+coherent.
