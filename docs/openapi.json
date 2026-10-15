@@ -596,6 +596,85 @@
           }
         }
       }
+    },
+    "/v1/catalog/marketplace/products": {
+      "get": {
+        "operationId": "CatalogController_marketplaceList",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/catalog/marketplace/products/{productSlug}": {
+      "get": {
+        "operationId": "CatalogController_marketplaceDetail",
+        "parameters": [
+          {
+            "name": "productSlug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/catalog/stores/{slug}/products": {
+      "get": {
+        "operationId": "CatalogController_storeList",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/catalog/stores/{slug}/products/{productSlug}": {
+      "get": {
+        "operationId": "CatalogController_storeDetail",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productSlug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "info": {

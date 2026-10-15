@@ -11,6 +11,7 @@ import { OnboardingController } from './onboarding.controller.js';
 import { ChannelController } from './channel.controller.js';
 import { AddressesController } from './addresses.controller.js';
 import { ProductController } from './product.controller.js';
+import { CatalogController } from './catalog.controller.js';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { ProductController } from './product.controller.js';
     // ReportingModule,
     // EngagementModule,
   ],
-  controllers: [HealthController, PingController, AuthController, StoresController, OnboardingController, ChannelController, AddressesController, ProductController],
+  controllers: [HealthController, PingController, AuthController, StoresController, OnboardingController, ChannelController, AddressesController, ProductController, CatalogController],
   providers: [HealthProbeService],
 })
 export class AppModule {}
