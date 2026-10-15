@@ -5,7 +5,7 @@
 // Skips gracefully when DATABASE_URL is unset or the database is unreachable,
 // so unit CI without services stays green; real runs happen with infra up.
 
-import { join, dirname } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { resetEnvCache } from '@shopscale/config';
@@ -13,13 +13,12 @@ import {
   DatabaseConfigError,
   openAdminConnection,
   requireDatabaseUrl,
-  resolveMigrationsDir,
+  findMigrationsDir,
   runMigrations,
 } from '../../src/platform/database.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(here, '..', '..');
-const migrationsDir = resolveMigrationsDir(repoRoot);
+const migrationsDir = findMigrationsDir(here);
 
 async function tryConnect(url: string) {
   const sql = openAdminConnection(url);

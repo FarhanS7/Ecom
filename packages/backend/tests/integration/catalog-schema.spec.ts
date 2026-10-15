@@ -14,15 +14,14 @@ import { CategoryError, createCategory, listCategories, reparentCategory } from 
 import {
   openAdminConnection,
   requireDatabaseUrl,
-  resolveMigrationsDir,
+  findMigrationsDir,
   runMigrations,
 } from '../../src/platform/database.js';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(here, '..', '..', '..');
-const migrationsDir = resolveMigrationsDir(repoRoot);
+const migrationsDir = findMigrationsDir(here);
 
 type Sql = Awaited<ReturnType<typeof openAdminConnection>>;
 

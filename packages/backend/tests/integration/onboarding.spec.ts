@@ -17,15 +17,14 @@ import {
 import {
   openAdminConnection,
   requireDatabaseUrl,
-  resolveMigrationsDir,
+  findMigrationsDir,
   runMigrations,
 } from '../../src/platform/database.js';
-import { dirname, join } from 'node:path';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = join(here, '..', '..', '..');
-const migrationsDir = resolveMigrationsDir(repoRoot);
+const migrationsDir = findMigrationsDir(here);
 
 const OWNER = 't015.owner@example.com';
 const STAFF = 't015.staff@example.com';

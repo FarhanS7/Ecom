@@ -3,7 +3,8 @@
 // Errors are redacted: never log the URL, password, or tokens.
 
 import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import postgres from 'postgres';
 import type { Sql } from 'postgres';
 import { getEnv, resetEnvCache } from '@shopscale/config';
@@ -119,4 +120,27 @@ export async function runMigrations(
 /** Resolve the migrations directory from a repo root or explicit override. */
 export function resolveMigrationsDir(repoRoot: string): string {
   return join(repoRoot, 'db', 'migrations');
+}
+
+/**
+ * Locate `db/migrations` by walking up from a directory inside the repository.
+ *
+ * Why this exists: seven integration specs computed the repo root with a fixed
+ * `join(here, '..', '..', '..')`. From `packages/backend/tests/integration` that
+ * resolves to `<repo>/packages`, so `runMigrations` was pointed at
+ * `<repo>/packages/db/migrations` and died on `readdir` (ENOENT) the moment a
+ * real database was reachable — the specs only ever printed their honest SKIP
+ * lines, so nobody saw it. Counting `..` is the bug; searching for the directory
+ * cannot silently drift when a file moves.
+ */
+export function findMigrationsDir(startDir: string): string {
+  let current = resolve(startDir);
+  for (let depth = 0; depth < 8; depth += 1) {
+    const candidate = resolveMigrationsDir(current);
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(current);
+    if (parent === current) break;
+    current = parent;
+  }
+  throw new Error(`Could not locate db/migrations by walking up from ${startDir}.`);
 }
