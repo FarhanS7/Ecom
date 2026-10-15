@@ -18,7 +18,14 @@ import {
   type SeedShape,
 } from './identity.js';
 
-const SHAPE: SeedShape = { stores: 3, productsPerStore: 4, variantsPerProduct: [2, 3], categories: 3, staffPerStore: 3 };
+const SHAPE: SeedShape = {
+  stores: 3,
+  emptyStores: 0,
+  productsPerStore: 4,
+  variantsPerProduct: [2, 3],
+  categories: 3,
+  staffPerStore: 3,
+};
 
 function plan(seed = 42, shape: SeedShape = SHAPE): IdentityPlan {
   return planIdentity({ seed, shape });
@@ -175,7 +182,9 @@ describe('scoped staff (T028a)', () => {
 describe('seed sizes (T028a)', () => {
   it('implements Tier S and refuses the streaming tiers by name', () => {
     expect(shapeForSize('s')).toEqual(TIER_S_SHAPE);
-    expect(TIER_S_SHAPE.productsPerStore * TIER_S_SHAPE.stores).toBeGreaterThanOrEqual(1000);
+    const catalogued = TIER_S_SHAPE.productsPerStore * (TIER_S_SHAPE.stores - TIER_S_SHAPE.emptyStores);
+    expect(catalogued).toBeGreaterThanOrEqual(1000);
+    expect(TIER_S_SHAPE.emptyStores).toBeGreaterThanOrEqual(1);
     for (const size of ['m', 'l', 'xl'] as const) {
       expect(() => shapeForSize(size)).toThrow(/T077/);
     }

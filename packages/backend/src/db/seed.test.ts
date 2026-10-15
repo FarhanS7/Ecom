@@ -6,21 +6,31 @@ import { assertSeedTarget, parseSeedArgs, redactedDatabaseLabel } from './seed.j
 
 describe('seed CLI arguments (T028a)', () => {
   it('accepts the documented --flag value form', () => {
-    expect(parseSeedArgs(['--size', 's', '--seed', '42'], {})).toEqual({ size: 's', seed: 42 });
+    expect(parseSeedArgs(['--size', 's', '--seed', '42'], {})).toEqual({ size: 's', seed: 42, verify: false });
   });
 
   it('accepts --flag=value and the original SIZE=/SEED= form', () => {
-    expect(parseSeedArgs(['--size=s', '--seed=7'], {})).toEqual({ size: 's', seed: 7 });
-    expect(parseSeedArgs(['SIZE=s', 'SEED=9'], {})).toEqual({ size: 's', seed: 9 });
+    expect(parseSeedArgs(['--size=s', '--seed=7'], {})).toEqual({ size: 's', seed: 7, verify: false });
+    expect(parseSeedArgs(['SIZE=s', 'SEED=9'], {})).toEqual({ size: 's', seed: 9, verify: false });
   });
 
   it('falls back to the environment, then to the documented defaults', () => {
-    expect(parseSeedArgs([], { SIZE: 's', SEED: '5' })).toEqual({ size: 's', seed: 5 });
-    expect(parseSeedArgs([], {})).toEqual({ size: 's', seed: 42 });
+    expect(parseSeedArgs([], { SIZE: 's', SEED: '5' })).toEqual({ size: 's', seed: 5, verify: false });
+    expect(parseSeedArgs([], {})).toEqual({ size: 's', seed: 42, verify: false });
   });
 
   it('lets an explicit flag win over the environment', () => {
-    expect(parseSeedArgs(['--seed', '3'], { SEED: '99' })).toEqual({ size: 's', seed: 3 });
+    expect(parseSeedArgs(['--seed', '3'], { SEED: '99' })).toEqual({ size: 's', seed: 3, verify: false });
+  });
+
+  it('defaults to seeding and accepts --verify as the read-only mode', () => {
+    expect(parseSeedArgs([], {}).verify).toBe(false);
+    expect(parseSeedArgs(['--verify'], {})).toEqual({ size: 's', seed: 42, verify: true });
+    expect(parseSeedArgs(['--size', 's', '--seed', '7', '--verify'], {})).toEqual({
+      size: 's',
+      seed: 7,
+      verify: true,
+    });
   });
 
   it('rejects an unknown size and a non-integer seed instead of defaulting silently', () => {

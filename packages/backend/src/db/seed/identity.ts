@@ -92,6 +92,12 @@ export interface IdentityPlan {
 
 export interface SeedShape {
   stores: number;
+  /**
+   * How many of the seeded stores are deliberately EMPTY. The catalogued total is
+   * `(stores - emptyStores) * productsPerStore`, which is why the Tier S shape
+   * below names them separately instead of hiding the subtraction.
+   */
+  emptyStores: number;
   productsPerStore: number;
   /** Inclusive range of variants per product. */
   variantsPerProduct: [number, number];
@@ -100,15 +106,18 @@ export interface SeedShape {
 }
 
 /**
- * Tier S shape. The task is explicitly Tier S ("extend later for orders"); M/L/XL
- * need streaming bulk load (T077) and are refused by the CLI rather than
+ * Tier S shape. The task is explicitly Tier S ("extend later for orders"): two
+ * catalogued stores of 500 products (1,000 products, ~2,500 variants) plus one
+ * active-but-empty store, which is what makes the storefront's empty state real.
+ * M/L/XL need streaming bulk load (T077) and are refused by the CLI rather than
  * half-implemented, because generating a million rows as JS objects would not
  * model the real thing.
  */
 export const TIER_S_SHAPE: SeedShape = {
   stores: 3,
-  productsPerStore: 334,
-  variantsPerProduct: [2, 4],
+  emptyStores: 1,
+  productsPerStore: 500,
+  variantsPerProduct: [2, 3],
   categories: 8,
   staffPerStore: 3,
 };
