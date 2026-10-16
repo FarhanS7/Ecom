@@ -369,11 +369,22 @@ describe('seller catalog writes (T020b)', () => {
     });
     expect(variant.statusCode).toBe(201);
 
+    // Creating a variant bumps the product's optimistic version (variant edits are
+    // gated by the product counter), so re-read the version before the versioned
+    // archive call instead of reusing the create response's.
+    const beforeArchive = await server().inject({
+      method: 'GET',
+      url: `/v1/seller/stores/${world.storeA}/products/${product.id}`,
+      headers: authed('ownerA'),
+    });
+    expect(beforeArchive.statusCode).toBe(200);
+    const currentVersion = (JSON.parse(beforeArchive.payload) as { version: number }).version;
+
     const archived = await server().inject({
       method: 'POST',
       url: `/v1/seller/stores/${world.storeA}/products/${product.id}/archive`,
       headers: authed('ownerA'),
-      payload: { expectedVersion: product.version },
+      payload: { expectedVersion: currentVersion },
     });
     expect(archived.statusCode).toBe(200);
     expect((JSON.parse(archived.payload) as { status: string }).status).toBe('archived');
@@ -548,7 +559,11 @@ describe('seller catalog writes (T020b)', () => {
       payload: { expectedVersion: unlisted.version + 1, status: 'archived' },
     });
     expect(badStatus.statusCode).toBe(404);
-    expect(badStatus.payload).not.toMatch(/status|constraint/i);
+    // A problem document ALWAYS carries a `status` field, so matching /status/
+    // proves nothing about leakage; assert the generic code and the absence of
+    // database internals instead.
+    expect((JSON.parse(badStatus.payload) as { code?: string }).code).toBe('NOT_FOUND');
+    expect(badStatus.payload).not.toMatch(/constraint|violates|relation|column|Postgre/i);
     expect((await sellerRead(draft.id)).version).toBe(unlisted.version + 1);
   });
 });

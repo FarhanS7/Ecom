@@ -230,8 +230,16 @@ describe('store scope over HTTP (T014b)', () => {
     });
     expect(unknown.statusCode).toBe(404);
     // Identical bodies: probing another store is indistinguishable from a
-    // store that does not exist.
-    expect(JSON.parse(probe.payload)).toEqual(JSON.parse(unknown.payload));
+    // store that does not exist. `instance` echoes the requested URL and
+    // `requestId` is per-request correlation, so neither is a signal about
+    // existence; the security-relevant fields must match exactly.
+    const stableProblem = (payload: string): Record<string, unknown> => {
+      const body = JSON.parse(payload) as Record<string, unknown>;
+      delete body['instance'];
+      delete body['requestId'];
+      return body;
+    };
+    expect(stableProblem(probe.payload)).toEqual(stableProblem(unknown.payload));
     expect(problemResponse.parse(JSON.parse(probe.payload)).code).toBe('NOT_FOUND');
   });
 

@@ -255,8 +255,16 @@ describe('registration and login over HTTP (T010b)', () => {
       expect(problemResponse.parse(JSON.parse(res.payload)).code).toBe('UNAUTHENTICATED');
       expectSecretFree(res.payload);
     }
-    expect(JSON.parse(wrong.payload)).toEqual(JSON.parse(unknown.payload));
-    expect(JSON.parse(unknown.payload)).toEqual(JSON.parse(suspended.payload));
+    const withoutRequestId = (payload: string): Record<string, unknown> => {
+      const body = JSON.parse(payload) as Record<string, unknown>;
+      // requestId is per-request correlation: it is deliberately unique, so
+      // comparing it would assert the opposite of its purpose. What must be
+      // indistinguishable is everything else about the failure.
+      delete body['requestId'];
+      return body;
+    };
+    expect(withoutRequestId(wrong.payload)).toEqual(withoutRequestId(unknown.payload));
+    expect(withoutRequestId(unknown.payload)).toEqual(withoutRequestId(suspended.payload));
   });
 
   it('rejects invalid registration bodies with 422', async () => {

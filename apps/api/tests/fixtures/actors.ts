@@ -97,6 +97,19 @@ export async function teardownMatrixWorld(sql: Sql): Promise<void> {
   await sql.unsafe(
     `DELETE FROM "store_memberships" WHERE "user_id" IN (SELECT "id" FROM "users" WHERE "email_normalized" IN (${list}));`,
   );
+  // products.store_id is RESTRICT, so a spec that created catalog rows under these
+  // stores must not leave them behind or this delete fails. Doing it here keeps
+  // teardown independent of the order the specs happen to run in (found by the
+  // T028c live run: permission-matrix's teardown hit the FK after catalog-write).
+  await sql.unsafe(
+    `DELETE FROM "product_publications" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" IN (${slugs})));`,
+  );
+  await sql.unsafe(
+    `DELETE FROM "product_variants" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" IN (${slugs})));`,
+  );
+  await sql.unsafe(
+    `DELETE FROM "products" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" IN (${slugs}));`,
+  );
   await sql.unsafe(`DELETE FROM "stores" WHERE "slug" IN (${slugs});`);
   await sql.unsafe(
     `DELETE FROM "businesses" WHERE "owner_user_id" IN (SELECT "id" FROM "users" WHERE "email_normalized" IN (${list})) AND "id" NOT IN (SELECT "business_id" FROM "stores");`,
