@@ -5,6 +5,17 @@
 
 import { z } from 'zod';
 
+// z.coerce.boolean() applies Boolean(value), so the string "false" parses as TRUE:
+// there would be no way to turn a flag off from the environment (only an absent
+// variable would fall back to the default). Accept the conventional spellings
+// explicitly and reject anything else, so a typo is a boot error rather than a
+// silent default. Found by the T028c live run: the T010b login spec sets
+// COOKIE_SECURE=false and still received a `Secure` cookie.
+const booleanFlag = z
+  .union([z.boolean(), z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+  .transform((value) => value === true || value === 'true' || value === '1')
+  .default(true);
+
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(3000),
@@ -16,7 +27,7 @@ export const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default('15m'),
   JWT_REFRESH_TTL: z.string().default('7d'),
   COOKIE_DOMAIN: z.string().optional(),
-  COOKIE_SECURE: z.coerce.boolean().default(true),
+  COOKIE_SECURE: booleanFlag,
   COOKIE_SAME_SITE: z.enum(['lax', 'strict', 'none']).default('lax'),
   MOCK_PAYMENTS_SECRET: z.string().min(32),
   MOCK_PAYMENTS_BASE_URL: z.string().url().optional(),
