@@ -49,6 +49,11 @@ T028c
 - `packages/backend/tests/integration/jsonb-round-trip.spec.ts` — new regression
 - `packages/backend/tests/integration/{storefront,identity-schema,migrations}.spec.ts`
   — stale live-spec expectations (Defect 5)
+- `packages/config/src/env.ts` + `env.test.ts` — explicit `COOKIE_SECURE` parsing
+  (Defect 6) and the package's first unit tests
+- `apps/api/tests/integration/{catalog-write,login,store-scope}.spec.ts`,
+  `apps/api/tests/fixtures/actors.ts` — stale live-spec expectations and
+  order-dependent teardown (Defect 7)
 - `docs/operations/commands.md` — seed workflow notes
 - `tasks/items/T028*.md`, `tasks/todo.md`
 
@@ -89,11 +94,14 @@ Gates on this host (Windows, no CI runner):
 
 | Gate | Result |
 | --- | --- |
+| `pnpm test` (workspace unit) | config 4, contracts 5, backend 122, web 173 |
 | `pnpm --filter=@shopscale/backend run test` | 22 files / 122 tests |
 | `pnpm --filter=@shopscale/backend run typecheck` | exit 0 |
 | `pnpm --filter=@shopscale/backend run build` | exit 0 |
+| `pnpm --filter=@shopscale/api run typecheck` | exit 0 |
 | `pnpm lint` | exit 0 |
 | `pnpm --filter=@shopscale/backend run test:integration` (live) | 10 files / 23 tests |
+| `pnpm --filter=@shopscale/api run test:integration` (live) | 12 files / 50 tests |
 | `pnpm seed --size s --seed 42` (live) | 1000 products, 2512 variants, 15 FK checks, verification passed |
 
 ### How the live run was obtained
@@ -155,9 +163,10 @@ that makes a hybrid impossible to miss.
 
 ## Defects found by the live run (and fixed)
 
-Running the specs against a real database for the first time surfaced five defects.
-All five are fixed on this branch, each with the evidence above; the two production
-ones are flagged here for the reviewer because they touch shipped code outside T028.
+Running the specs against a real database for the first time surfaced seven
+defects. All seven are fixed on this branch, each with the evidence above; the
+production ones (1, 2, 3, 6) are flagged here for the reviewer because they touch
+shipped code outside T028.
 
 1. **Seed wrote jsonb as JSON strings** (`fix(seed)`, `58388ba`). Batched inserts
    passed `canonicalJson(...)` with a bare `::jsonb`. Postgres infers such a
@@ -207,11 +216,34 @@ ones are flagged here for the reviewer because they touch shipped code outside T
    (exact permission sets, idempotent re-apply then a fully-skipped run) rather than
    a number that goes stale.
 
+6. **`COOKIE_SECURE=false` was impossible** (`fix(config)`, `9296634`). The schema
+   used `z.coerce.boolean()`, which applies `Boolean(value)` — so the string
+   `"false"` parsed as `true`, and the flag could only ever be off by omitting the
+   variable. The T010b login spec sets `COOKIE_SECURE=false` and still received a
+   `Secure` cookie, which is how the live run found it; in a local HTTP environment
+   the same bug means the browser never sends the cookie back. Now the conventional
+   spellings are parsed explicitly (and a typo is a boot error), with the config
+   package's first tests.
+
+7. **Four API-spec assertions that had never executed** (`fix(api)`, `a8e277b`).
+   `login` and `store-scope` compared whole problem documents for equality, but
+   every response carries a unique `requestId` (and `instance` echoes the URL), so
+   the "indistinguishable failure" assertions could never hold; they now compare
+   everything except those correlation fields. `catalog-write` archived with the
+   version from `createProduct` although creating a variant bumps the product's
+   optimistic version (so the 409 was correct), and asserted a malformed-status
+   response does not match `/status|constraint/i` even though every problem document
+   contains a `status` field. `teardownMatrixWorld` deleted stores while products
+   still referenced them (`RESTRICT`), making a later spec's teardown fail depending
+   on file order; it now removes publications, variants and products first. The API
+   integration suite went from 39/50 to **50/50 live**.
+
 ## Pendings (not claimed as done)
 
-- **API-level live suite**: `apps/api` integration specs need Redis (sessions, rate
-  limits); no Redis is available on this host. The HTTP-layer behaviour of the
-  Defect 2/3 fixes is therefore verified at the database boundary only.
+- **API-level live suite**: runs fully on this host (12 files / 50 tests) — the
+  sessions are Postgres-backed and the setup stubs the rate limiter, so Redis is not
+  needed. It is green, so this is no longer a pending. Redis-dependent *unit* paths
+  outside these specs were not exercised.
 - **Playwright**: no browsers on this host, so `product-list`, `product-detail`,
   `storefront-home` and `seller-catalog` are unrun.
 - **Visual baseline diffing** and the **independent review** (needs a distinct model
