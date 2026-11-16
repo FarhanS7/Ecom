@@ -18,14 +18,25 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import {
+  inventoryListResponse,
   productResponse,
   sellerProductListResponse,
+  stockMovementsResponse,
+  storeContentSchema,
   storeMembershipResponse,
+  storeTeamSummarySchema,
+  themeTokensSchema,
   variantListResponse,
+  z,
 } from '@shopscale/contracts';
 import type {
+  InventoryItemView,
   ProductResponse,
+  StockMovementItem,
+  StoreContentDto,
   StoreMembershipResponse,
+  StoreTeamSummaryDto,
+  ThemeTokens,
   VariantResponse,
 } from '@shopscale/contracts';
 import { apiBaseUrl } from '@/lib/api';
@@ -95,6 +106,38 @@ export function sellerArchivePath(storeId: string, productId: string): string {
   return `${sellerProductPath(storeId, productId)}/archive`;
 }
 
+export function sellerInventoryPath(storeId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/inventory`;
+}
+
+export function sellerInventoryAdjustPath(storeId: string): string {
+  return `${sellerInventoryPath(storeId)}/adjust`;
+}
+
+export function sellerTeamPath(storeId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/team`;
+}
+
+export function sellerThemePath(storeId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/theme`;
+}
+
+export function sellerContentPath(storeId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/content`;
+}
+
+export function sellerInvitationsPath(storeId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/invitations`;
+}
+
+export function sellerMemberPath(storeId: string, userId: string): string {
+  return `/v1/seller/stores/${requireId(storeId)}/members/${requireId(userId)}`;
+}
+
+export function sellerVariantMovementsPath(storeId: string, variantId: string): string {
+  return `${sellerInventoryPath(storeId)}/${requireId(variantId)}/movements`;
+}
+
 /** Problem+JSON detail/title. The API keeps these constant and non-revealing
  * on scoped routes, so surfacing the text does not leak scope information. */
 async function problemMessage(response: Response): Promise<string> {
@@ -111,7 +154,7 @@ async function problemMessage(response: Response): Promise<string> {
 /** One place where an API response becomes a console outcome. */
 export async function sellerFetch<T>(
   path: string,
-  init: { method: 'GET' | 'POST' | 'PATCH'; body?: unknown },
+  init: { method: 'GET' | 'POST' | 'PATCH' | 'PUT'; body?: unknown },
   schema: Schema<T>,
 ): Promise<SellerCall<T>> {
   let base: string;
@@ -174,7 +217,11 @@ function toRead<T>(call: SellerCall<T>): SellerRead<T> {
  * `cache()` is keyed on the primitive store id, so the layout and the page in
  * one request share a single call (and one cache node per store).
  */
-export const loadMembership = cache(
+function memoize<Args extends unknown[], R>(fn: (...args: Args) => R): (...args: Args) => R {
+  return typeof cache === 'function' ? cache(fn) : fn;
+}
+
+export const loadMembership = memoize(
   async (storeId: string): Promise<SellerRead<StoreMembershipResponse>> => {
     if (!isSellerId(storeId)) return { status: 'not-found' };
     return toRead(
@@ -197,7 +244,7 @@ export async function loadSellerProducts(
 }
 
 /** One store-scoped product, or a definite not-found. */
-export const loadSellerProduct = cache(
+export const loadSellerProduct = memoize(
   async (storeId: string, productId: string): Promise<SellerRead<ProductResponse>> => {
     if (!isSellerId(storeId) || !isSellerId(productId)) return { status: 'not-found' };
     return toRead(
@@ -218,4 +265,70 @@ export async function loadVariants(
     variantListResponse,
   );
   return call.status === 'ok' ? { status: 'ok', data: call.data.items } : toRead(call);
+}
+
+/** Stock counters for all variants in the seller's store. */
+export async function loadSellerInventory(
+  storeId: string,
+): Promise<SellerRead<InventoryItemView[]>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const call = await sellerFetch(
+    sellerInventoryPath(storeId),
+    { method: 'GET' },
+    inventoryListResponse,
+  );
+  return call.status === 'ok' ? { status: 'ok', data: call.data.items } : toRead(call);
+}
+
+/** Movement ledger history for a store variant. */
+export async function loadVariantMovements(
+  storeId: string,
+  variantId: string,
+): Promise<SellerRead<StockMovementItem[]>> {
+  if (!isSellerId(storeId) || !isSellerId(variantId)) return { status: 'not-found' };
+  const call = await sellerFetch(
+    sellerVariantMovementsPath(storeId, variantId),
+    { method: 'GET' },
+    stockMovementsResponse,
+  );
+  return call.status === 'ok' ? { status: 'ok', data: call.data.items } : toRead(call);
+}
+
+/** Team members and pending staff invitations for a store. */
+export async function loadStoreTeam(
+  storeId: string,
+): Promise<SellerRead<StoreTeamSummaryDto>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const call = await sellerFetch(
+    sellerTeamPath(storeId),
+    { method: 'GET' },
+    storeTeamSummarySchema,
+  );
+  return call.status === 'ok' ? { status: 'ok', data: call.data } : toRead(call);
+}
+
+/** Active theme tokens for a store. */
+export async function loadStoreTheme(
+  storeId: string,
+): Promise<SellerRead<ThemeTokens>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const call = await sellerFetch(
+    sellerThemePath(storeId),
+    { method: 'GET' },
+    z.object({ theme: themeTokensSchema }),
+  );
+  return call.status === 'ok' ? { status: 'ok', data: call.data.theme } : toRead(call);
+}
+
+/** Storefront homepage content and banners. */
+export async function loadStoreContent(
+  storeId: string,
+): Promise<SellerRead<StoreContentDto>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const call = await sellerFetch(
+    sellerContentPath(storeId),
+    { method: 'GET' },
+    storeContentSchema,
+  );
+  return call.status === 'ok' ? { status: 'ok', data: call.data } : toRead(call);
 }

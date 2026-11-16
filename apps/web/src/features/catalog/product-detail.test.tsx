@@ -14,6 +14,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 import { CatalogUnavailable, ProductDetail } from '@/features/catalog/product-detail';
+import { CartContext } from '@/features/cart/cart-context';
+import type { CartContextValue } from '@/features/cart/cart-context';
 
 const VARIANT_A = '11111111-1111-4111-8111-111111111111';
 const VARIANT_B = '22222222-2222-4222-8222-222222222222';
@@ -35,6 +37,7 @@ function detail(overrides: Record<string, unknown> = {}) {
       { id: VARIANT_A, sku: 'X-BLK', priceCents: 9900, attributes: { color: 'Black' } },
       { id: VARIANT_B, sku: 'X-WHT', priceCents: 12900, attributes: { color: 'White' } },
     ],
+    images: [],
     ...overrides,
   };
 }
@@ -119,23 +122,44 @@ describe('variant selection (T026b)', () => {
   });
 });
 
-describe('the purchase affordance never pretends to be connected (T026b)', () => {
-  it('disables the CTA and explains why, tied to the control', () => {
-    render(<ProductDetail product={detail()} storeSlug={null} initialVariantId={VARIANT_A} />);
+describe('the purchase affordance and add-to-cart interactions (T026b, T043)', () => {
+  it('enables the CTA on stocked products and calls addItem on click', async () => {
+    const addItem = vi.fn().mockResolvedValue(undefined);
+    const mockCartValue: CartContextValue = {
+      cart: null,
+      channelKey: 'marketplace',
+      isOpen: false,
+      loading: false,
+      error: null,
+      totalCount: 0,
+      subtotalCents: 0,
+      openCart: vi.fn(),
+      closeCart: vi.fn(),
+      addItem,
+      updateQuantity: vi.fn(),
+      removeItem: vi.fn(),
+      clearCart: vi.fn(),
+      refreshCart: vi.fn(),
+    };
+
+    render(
+      <CartContext.Provider value={mockCartValue}>
+        <ProductDetail product={detail()} storeSlug={null} initialVariantId={VARIANT_A} />
+      </CartContext.Provider>,
+    );
 
     const cta = screen.getByRole('button', { name: 'Add to cart' });
-    expect(cta).toBeDisabled();
-    const reason = screen.getByText('Checkout is not connected yet.');
-    expect(reason).toBeVisible();
-    expect(cta).toHaveAttribute('aria-describedby', reason.id);
+    expect(cta).not.toBeDisabled();
+
+    fireEvent.click(cta);
+    expect(addItem).toHaveBeenCalledWith(VARIANT_A, 1);
   });
 
-  it('gives a variant-less product its own reason', () => {
+  it('gives a variant-less product its own reason and keeps CTA disabled', () => {
     const product = detail({ variants: [], priceCents: 5000 });
     render(<ProductDetail product={product} storeSlug={null} initialVariantId={null} />);
 
     expect(screen.getByText(/no active variant/i)).toBeVisible();
-    expect(screen.queryByText('Checkout is not connected yet.')).toBeNull();
     expect(screen.getByRole('button', { name: 'Add to cart' })).toBeDisabled();
     // With no variants the product's own price is shown, never blank.
     expect(screen.getByTestId('pdp-price')).toHaveTextContent(/50\.00|50/);

@@ -15,6 +15,8 @@ import { getDb } from '../db/client.js';
 import { CATALOG_SORTS, encodeCursor, filterFingerprint } from './cursor.js';
 import type { CatalogChannel, CatalogSort } from './cursor.js';
 import { VISIBILITY_WHERE, buildListQuery, cursorTupleForRow, visibilityArgs } from './list-query.js';
+import { RedisCacheService, redisCacheService } from '../platform/cache.service.js';
+import { storageService } from '../platform/storage.service.js';
 
 export { CATALOG_SORTS };
 export type { CatalogChannel, CatalogSort };
@@ -35,6 +37,7 @@ export interface ChannelProductDetail extends ChannelProductSummary {
   status: string;
   store: { slug: string; name: string };
   variants: Array<{ id: string; sku: string; priceCents: number; attributes: Record<string, unknown> }>;
+  images: Array<{ id: string; assetId: string; url: string; displayOrder: number; isPrimary: boolean; alt: string }>;
 }
 
 export interface ChannelListQuery {
@@ -110,13 +113,13 @@ export async function listChannelProducts(
 }
 
 /**
- * Public detail. Unknown slug, unpublished product, draft/archived row,
+ * Public detail database loader. Unknown slug, unpublished product, draft/archived row,
  * suspended store, and malformed input ALL return null — one outcome, no
  * oracle.
  */
-export async function getChannelProduct(
+async function loadChannelProductFromDb(
   query: ChannelListQuery & { productSlug: string },
-  sql: Sql = getDb(),
+  sql: Sql,
 ): Promise<ChannelProductDetail | null> {
   const rows = (await sql.unsafe(
     `SELECT "p"."id","p"."slug","p"."title","p"."brand","p"."min_price_cents","p"."currency",
@@ -137,6 +140,16 @@ export async function getChannelProduct(
      ORDER BY "sku";`,
     [row.id],
   )) as unknown as Array<{ id: string; sku: string; price_cents: string | number; attributes: unknown }>;
+
+  const images = (await sql.unsafe(
+    `SELECT pi."id", pi."asset_id", pi."display_order", pi."is_primary", ma."object_key"
+     FROM "product_images" pi
+     JOIN "media_assets" ma ON ma."id" = pi."asset_id"
+     WHERE pi."product_id" = $1 AND ma."status" = 'ready'
+     ORDER BY pi."display_order" ASC, pi."created_at" ASC;`,
+    [row.id],
+  )) as unknown as Array<{ id: string; asset_id: string; display_order: number; is_primary: boolean; object_key: string }>;
+
   return {
     ...toSummary(row),
     description: row.description,
@@ -149,7 +162,31 @@ export async function getChannelProduct(
       priceCents: Number(v.price_cents),
       attributes: v.attributes as Record<string, unknown>,
     })),
+    images: images.map((img) => ({
+      id: img.id,
+      assetId: img.asset_id,
+      url: storageService.getPublicUrl(img.object_key),
+      displayOrder: img.display_order,
+      isPrimary: img.is_primary,
+      alt: row.title,
+    })),
   };
+}
+
+/**
+ * Public detail. Wrapped with Redis cache-aside and stampede mutex (T033).
+ */
+export async function getChannelProduct(
+  query: ChannelListQuery & { productSlug: string },
+  sql: Sql = getDb(),
+  cache: RedisCacheService | null = redisCacheService,
+): Promise<ChannelProductDetail | null> {
+  if (!cache) {
+    return loadChannelProductFromDb(query, sql);
+  }
+  const channelKey = query.channel === 'store' ? `store:${query.storeSlug}` : 'marketplace';
+  const cacheKey = `cache:pdp:${channelKey}:${query.productSlug}`;
+  return cache.getOrSet(cacheKey, 300, () => loadChannelProductFromDb(query, sql));
 }
 
 /**

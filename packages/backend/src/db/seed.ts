@@ -27,6 +27,7 @@ import {
   type SeedSize,
 } from './seed/identity.js';
 import { planThemes, writeThemes, type ThemeWriteReport } from './seed/themes.js';
+import { planOrders, writeOrders, type OrdersWriteReport } from './seed/orders.js';
 import { planChecksum, verifyDatabase, type SeedVerification } from './seed/verify.js';
 
 export interface SeedOptions {
@@ -96,6 +97,7 @@ export interface SeedReport {
   identity: IdentityWriteReport;
   catalog: CatalogWriteReport;
   themes: ThemeWriteReport;
+  orders: OrdersWriteReport;
   /** Digest of the PLAN, for comparison with the database checksum. */
   planChecksum: string;
 }
@@ -106,17 +108,20 @@ export async function seedDatabase(sql: Sql, options: SeedOptions): Promise<Seed
   const identity = planIdentity({ seed: options.seed, shape });
   const catalog = planCatalog(identity);
   const themes = planThemes(identity, catalog);
-  const bundle = { identity, catalog, themes };
+  const orders = planOrders({ seed: options.seed, size: options.size, identity, catalog });
+  const bundle = { identity, catalog, themes, orders };
 
   const identityReport = await writeIdentity(sql, identity);
   const catalogReport = await writeCatalog(sql, catalog);
   const themeReport = await writeThemes(sql, themes);
+  const orderReport = await writeOrders(sql, orders);
 
   return {
     options,
     identity: identityReport,
     catalog: catalogReport,
     themes: themeReport,
+    orders: orderReport,
     planChecksum: planChecksum(bundle),
   };
 }

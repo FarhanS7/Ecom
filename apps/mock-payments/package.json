@@ -1,0 +1,25 @@
+{
+  "name": "@shopscale/mock-payments",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:unit": "vitest run --reporter=verbose",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@shopscale/config": "workspace:*",
+    "@shopscale/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.4.0"
+  }
+}

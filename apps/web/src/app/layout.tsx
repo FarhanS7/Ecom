@@ -9,6 +9,7 @@ import '@/styles/components.css';
 import './globals.css';
 import { Header } from '@/components/header';
 import { Footer, Frame } from '@/components/ui';
+import { CartDrawer, CartProvider } from '@/features/cart';
 
 export const metadata: Metadata = {
   title: {
@@ -25,11 +26,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a className="sr-only" href="#main">
           Skip to content
         </a>
-        <Frame>
-          <Header tenantName="ShopScale" />
-          <main id="main">{children}</main>
-          <Footer label="ShopScale" />
-        </Frame>
+        <CartProvider channelKey="marketplace">
+          <Frame>
+            <Header tenantName="ShopScale" />
+            <main id="main">{children}</main>
+            <Footer label="ShopScale" />
+          </Frame>
+          <CartDrawer />
+        </CartProvider>
       </body>
     </html>
   );

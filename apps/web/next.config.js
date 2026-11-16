@@ -6,6 +6,37 @@ const nextConfig = {
     optimizePackageImports: ['@shopscale/contracts', '@shopscale/config'],
   },
   transpilePackages: ['@shopscale/contracts', '@shopscale/config'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '9000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '9000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.amazonaws.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.example.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.example.com',
+        pathname: '/**',
+      },
+    ],
+  },
   async headers() {
     return [
       {

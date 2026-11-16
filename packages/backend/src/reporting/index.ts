@@ -1,3 +1,4 @@
+export * from './analytics.service.js';
 // @shopscale/backend/reporting - Read-replica analytics, audit log, seller/platform dashboards
 export interface SalesMetrics {
   gmvCents: number;

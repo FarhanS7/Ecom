@@ -122,6 +122,33 @@ export const TIER_S_SHAPE: SeedShape = {
   staffPerStore: 3,
 };
 
+export const TIER_M_SHAPE: SeedShape = {
+  stores: 50,
+  emptyStores: 2,
+  productsPerStore: 208,
+  variantsPerProduct: [2, 3],
+  categories: 25,
+  staffPerStore: 3,
+};
+
+export const TIER_L_SHAPE: SeedShape = {
+  stores: 500,
+  emptyStores: 10,
+  productsPerStore: 204,
+  variantsPerProduct: [2, 3],
+  categories: 50,
+  staffPerStore: 3,
+};
+
+export const TIER_XL_SHAPE: SeedShape = {
+  stores: 5000,
+  emptyStores: 50,
+  productsPerStore: 202,
+  variantsPerProduct: [2, 3],
+  categories: 100,
+  staffPerStore: 3,
+};
+
 export const SEED_EMAIL_PREFIX = 'seed.';
 export const SEED_SLUG_PREFIX = 'seed-';
 
@@ -138,12 +165,18 @@ export const SEED_DEMO_PASSWORD_HASH =
   '$argon2id$v=19$m=65536,t=3,p=4$77ZCpfpF8PL1BduZ81uLng$m4E6j0ISFea+RQBeKwdBzFqx1xob/3iLlhVeKnxPOVk';
 
 export function shapeForSize(size: SeedSize): SeedShape {
-  if (size !== 's') {
-    throw new Error(
-      `Seed size "${size}" is not implemented: T028 ships the Tier S catalog and T077 owns the M/L/XL streaming tiers.`,
-    );
+  switch (size) {
+    case 's':
+      return TIER_S_SHAPE;
+    case 'm':
+      return TIER_M_SHAPE;
+    case 'l':
+      return TIER_L_SHAPE;
+    case 'xl':
+      return TIER_XL_SHAPE;
+    default:
+      throw new Error(`Unknown seed size: "${String(size)}"`);
   }
-  return TIER_S_SHAPE;
 }
 
 function storeSlug(index: number): string {

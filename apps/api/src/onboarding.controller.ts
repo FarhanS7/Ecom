@@ -4,17 +4,19 @@
 // duplicates are 409s with constant safe messages; admin-only routes 403.
 // Validation uses explicit zod parsing (never inferred metadata — T006b rule).
 
-import { Body, ConflictException, Controller, ForbiddenException, HttpCode, NotFoundException, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, ForbiddenException, Get, HttpCode, NotFoundException, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import {
   OnboardingError,
   acceptInvitation,
   applyForStore,
   approveStore,
+  listAdminStores,
   suspendStore,
 } from '@shopscale/backend';
 import type { Actor } from '@shopscale/backend';
 import {
+  adminSellerListResponseSchema,
   adminStoreResponse,
   invitationAcceptRequest,
   memberResponse,
@@ -61,6 +63,21 @@ export class OnboardingController {
         { userId: req.actor.userId, slug: parsed.data.slug, name: parsed.data.name, requestId: requestIdOf(req) },
       );
       return sellerApplicationResponse.parse(out);
+    } catch (err) {
+      toOnboardingError(err);
+    }
+  }
+
+  @Get('admin/stores')
+  async listStores(
+    @Req() req: GuardedRequest,
+    @Query('status') status?: string,
+  ): Promise<unknown> {
+    if (!req.actor) throw new NotFoundException('Store not found.');
+    const validStatus = status === 'pending' || status === 'active' || status === 'suspended' ? status : undefined;
+    try {
+      const stores = await listAdminStores({ status: validStatus, actorId: req.actor.userId });
+      return adminSellerListResponseSchema.parse({ items: stores });
     } catch (err) {
       toOnboardingError(err);
     }

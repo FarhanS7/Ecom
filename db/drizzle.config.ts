@@ -18,6 +18,8 @@ export default {
     './src/stores/schema.ts',
     './src/platform/schema.ts',
     './src/catalog/schema.ts',
+    './src/cart/schema.ts',
+    './src/commerce/schema.ts',
   ],
   out: '../../db/migrations',
   dialect: 'postgresql',

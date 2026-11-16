@@ -13,6 +13,8 @@
 import type { Sql } from 'postgres';
 import { getDb } from '../db/client.js';
 import type { Queryable } from '../identity/auth.service.js';
+import { writeOutboxEvent } from '../platform/outbox.service.js';
+import { auditService } from '../platform/audit.service.js';
 
 export type CatalogFailure = 'NOT_FOUND' | 'VERSION_CONFLICT' | 'CONFLICT';
 
@@ -195,7 +197,25 @@ export async function createProduct(input: ProductCreateInput, sql: Sql = getDb(
     const row = rows[0];
     if (!row) throw new Error('Product insert returned no row.');
     await tx.unsafe(`INSERT INTO "product_publications" ("product_id") VALUES ($1);`, [row.id]);
-    return readProductScoped(tx, input.storeId, row.id);
+    const product = await readProductScoped(tx, input.storeId, row.id);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: product.id,
+      aggregateVersion: product.version,
+      type: 'ProductChanged',
+      schemaVersion: 1,
+      storeId: product.storeId,
+      payload: {
+        productId: product.id,
+        storeId: product.storeId,
+        version: product.version,
+        action: 'created',
+        slug: product.slug,
+        title: product.title,
+        status: product.status,
+      },
+    });
+    return product;
   });
 }
 
@@ -264,7 +284,23 @@ export async function updateProduct(input: ProductMutateInput & { patch: Product
     if (status === 'active') await assertHasActiveVariant(tx, input.storeId, input.productId);
     // A status change can change which variants count toward the derived price.
     if (status !== undefined) await refreshMinPrice(tx, input.storeId, input.productId);
-    return readProductScoped(tx, input.storeId, input.productId);
+    const product = await readProductScoped(tx, input.storeId, input.productId);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: product.id,
+      aggregateVersion: product.version,
+      type: 'ProductChanged',
+      schemaVersion: 1,
+      storeId: product.storeId,
+      payload: {
+        productId: product.id,
+        storeId: product.storeId,
+        version: product.version,
+        action: 'updated',
+        status: product.status,
+      },
+    });
+    return product;
   });
 }
 
@@ -296,7 +332,34 @@ export async function archiveProduct(input: ProductMutateInput, sql: Sql = getDb
       await readProductScoped(tx, input.storeId, input.productId);
       throw new CatalogError('VERSION_CONFLICT', 'Product was modified by another writer.');
     }
-    return readProductScoped(tx, input.storeId, input.productId);
+    const product = await readProductScoped(tx, input.storeId, input.productId);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: product.id,
+      aggregateVersion: product.version,
+      type: 'ProductChanged',
+      schemaVersion: 1,
+      storeId: product.storeId,
+      payload: {
+        productId: product.id,
+        storeId: product.storeId,
+        version: product.version,
+        action: 'archived',
+        status: product.status,
+      },
+    });
+    await auditService.recordMutation(
+      {
+        storeId: product.storeId,
+        action: 'catalog.product_archived',
+        entityType: 'product',
+        entityId: product.id,
+        before: { version: input.expectedVersion },
+        after: { version: product.version, status: product.status },
+      },
+      tx,
+    );
+    return product;
   });
 }
 
@@ -340,6 +403,22 @@ export async function createVariant(
       input.productId,
     ]);
     await refreshMinPrice(tx, input.storeId, input.productId);
+    const updatedProduct = await readProductScoped(tx, input.storeId, input.productId);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: input.productId,
+      aggregateVersion: updatedProduct.version,
+      type: 'ProductChanged',
+      schemaVersion: 1,
+      storeId: input.storeId,
+      payload: {
+        productId: input.productId,
+        storeId: input.storeId,
+        version: updatedProduct.version,
+        action: 'variant_created',
+        variantId: inserted[0]!.id,
+      },
+    });
     const rows = (await tx.unsafe(
       `SELECT "id","product_id","sku","price_cents","attributes","status" FROM "product_variants" WHERE "id" = $1;`,
       [inserted[0]!.id],
@@ -419,6 +498,22 @@ export async function updateVariant(
       input.productId,
     ]);
     await refreshMinPrice(tx, input.storeId, input.productId);
+    const updatedProduct = await readProductScoped(tx, input.storeId, input.productId);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: input.productId,
+      aggregateVersion: updatedProduct.version,
+      type: 'ProductChanged',
+      schemaVersion: 1,
+      storeId: input.storeId,
+      payload: {
+        productId: input.productId,
+        storeId: input.storeId,
+        version: updatedProduct.version,
+        action: 'variant_updated',
+        variantId: input.variantId,
+      },
+    });
     return toVariant(row);
   });
 }
@@ -485,6 +580,22 @@ export async function setPublication(
       input.storeId,
       input.productId,
     ]);
-    return readProductScoped(tx, input.storeId, input.productId);
+    const product = await readProductScoped(tx, input.storeId, input.productId);
+    await writeOutboxEvent(tx, {
+      aggregateType: 'product',
+      aggregateId: product.id,
+      aggregateVersion: product.version,
+      type: 'PublicationChanged',
+      schemaVersion: 1,
+      storeId: product.storeId,
+      payload: {
+        productId: product.id,
+        storeId: product.storeId,
+        version: product.version,
+        marketplaceEnabled: product.marketplaceEnabled,
+        storeEnabled: product.storeEnabled,
+      },
+    });
+    return product;
   });
 }

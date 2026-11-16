@@ -17,7 +17,23 @@
 // and returns it, so the console can offer "reload latest" or "apply my
 // changes" instead of an error wall.
 
-import type { ProductResponse, VariantResponse } from '@shopscale/contracts';
+import type {
+  AdjustStockResponse,
+  ProductResponse,
+  StoreContentDto,
+  StoreStaffRole,
+  ThemeTokens,
+  VariantResponse,
+} from '@shopscale/contracts';
+import {
+  adjustStockRequest,
+  invitationResponse,
+  inviteStaffSchema,
+  memberResponse,
+  themeTokensSchema,
+  updateStoreContentSchema,
+  z,
+} from '@shopscale/contracts';
 import {
   loadSellerProduct,
   isSellerId,
@@ -177,4 +193,100 @@ export async function archiveProduct(input: ArchiveInput): Promise<ProductSaveSt
   const call = await api.archiveProduct(storeId, productId, expectedVersion);
   if (call.status === 'ok') return { status: 'saved', product: call.data };
   return toFailure(call, storeId, productId);
+}
+
+export type AdjustStockActionState =
+  | { status: 'ok'; data: AdjustStockResponse }
+  | { status: 'bad-input'; message: string }
+  | { status: 'conflict'; message: string }
+  | { status: 'not-found' }
+  | { status: 'unavailable' }
+  | { status: 'unauthenticated' };
+
+export async function adjustStockAction(
+  storeId: string,
+  rawInput: unknown,
+): Promise<AdjustStockActionState> {
+  if (!isSellerId(storeId)) {
+    return { status: 'not-found' };
+  }
+
+  const parsed = adjustStockRequest.safeParse(rawInput);
+  if (!parsed.success) {
+    return { status: 'bad-input', message: 'Invalid stock adjustment input' };
+  }
+
+  const call = await api.adjustStock(storeId, parsed.data);
+  if (call.status === 'ok') {
+    return { status: 'ok', data: call.data };
+  }
+  if (call.status === 'conflict') {
+    return { status: 'conflict', message: call.message };
+  }
+  return call;
+}
+
+export type SettingsActionState<T> =
+  | { status: 'ok'; data: T }
+  | { status: 'bad-input'; message: string }
+  | { status: 'conflict'; message: string }
+  | { status: 'not-found' }
+  | { status: 'unavailable' }
+  | { status: 'unauthenticated' };
+
+export async function saveThemeAction(
+  storeId: string,
+  rawTheme: unknown,
+): Promise<SettingsActionState<ThemeTokens>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const parsed = themeTokensSchema.safeParse(rawTheme);
+  if (!parsed.success) {
+    return { status: 'bad-input', message: 'Invalid theme colors or radius. Colors must match #RRGGBB format and radius 0-16.' };
+  }
+  const call = await api.saveStoreTheme(storeId, parsed.data);
+  if (call.status === 'ok') return { status: 'ok', data: call.data.theme };
+  if (call.status === 'conflict') return { status: 'conflict', message: call.message };
+  return call;
+}
+
+export async function saveContentAction(
+  storeId: string,
+  rawContent: unknown,
+): Promise<SettingsActionState<StoreContentDto>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const parsed = updateStoreContentSchema.safeParse(rawContent);
+  if (!parsed.success) {
+    return { status: 'bad-input', message: 'Invalid store content format.' };
+  }
+  const call = await api.saveStoreContent(storeId, parsed.data);
+  if (call.status === 'ok') return { status: 'ok', data: call.data };
+  if (call.status === 'conflict') return { status: 'conflict', message: call.message };
+  return call;
+}
+
+export async function inviteTeamMemberAction(
+  storeId: string,
+  rawInput: unknown,
+): Promise<SettingsActionState<z.infer<typeof invitationResponse>>> {
+  if (!isSellerId(storeId)) return { status: 'not-found' };
+  const parsed = inviteStaffSchema.safeParse(rawInput);
+  if (!parsed.success) {
+    return { status: 'bad-input', message: 'Invalid email address or role.' };
+  }
+  const call = await api.inviteTeamMember(storeId, parsed.data);
+  if (call.status === 'ok') return { status: 'ok', data: call.data };
+  if (call.status === 'conflict') return { status: 'conflict', message: call.message };
+  return call;
+}
+
+export async function updateTeamMemberAction(
+  storeId: string,
+  userId: string,
+  input: { role?: StoreStaffRole; status?: 'active' | 'revoked' },
+): Promise<SettingsActionState<z.infer<typeof memberResponse>>> {
+  if (!isSellerId(storeId) || !isSellerId(userId)) return { status: 'not-found' };
+  const call = await api.updateTeamMember(storeId, userId, input);
+  if (call.status === 'ok') return { status: 'ok', data: call.data };
+  if (call.status === 'conflict') return { status: 'conflict', message: call.message };
+  return call;
 }

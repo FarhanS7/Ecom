@@ -78,6 +78,8 @@ async function proxy(
   };
   const cookies = filterSessionCookies(req.headers.get('cookie'));
   if (cookies) headers['cookie'] = cookies;
+  const idempotencyKey = req.headers.get('idempotency-key');
+  if (idempotencyKey) headers['idempotency-key'] = idempotencyKey;
   // Body is buffered as text first: no duplex streaming semantics, and the
   // content type is re-declared explicitly (never trust-blended). GET and
   // DELETE never carry a body (T091b).

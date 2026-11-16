@@ -1,0 +1,36 @@
+{
+  "metrics": {
+    "http_reqs": {
+      "count": 58240,
+      "rate": 97.06
+    },
+    "checkout_duration": {
+      "avg": 182.4,
+      "min": 45.2,
+      "med": 154.6,
+      "max": 680.2,
+      "p(90)": 285.4,
+      "p(95)": 365.2,
+      "p(99)": 472.8
+    },
+    "orders_created": {
+      "count": 58204,
+      "rate": 97.00
+    },
+    "checkout_failures": {
+      "passes": 36,
+      "fails": 58204,
+      "value": 0.00061
+    },
+    "http_req_failed": {
+      "passes": 36,
+      "fails": 58204,
+      "value": 0.00061
+    }
+  },
+  "thresholds": {
+    "checkout_duration": { "ok": true },
+    "checkout_failures": { "ok": true },
+    "http_req_failed": { "ok": true }
+  }
+}

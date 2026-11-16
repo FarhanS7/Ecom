@@ -1,0 +1,42 @@
+groups:
+  - name: shopscale-operational-alerts
+    rules:
+      - alert: OutboxLagHigh
+        expr: outbox_lag_seconds > 30
+        for: 1m
+        labels:
+          severity: critical
+          tier: core
+        annotations:
+          summary: Transactional outbox event lag is greater than 30 seconds
+          description: "Outbox relay lag has been {{ $value }}s for more than 1 minute. Downstream consumers may be starved or stalling."
+
+      - alert: HttpErrorRateHigh
+        expr: (sum(rate(http_request_duration_seconds_count{status_class="5xx"}[2m])) / sum(rate(http_request_duration_seconds_count[2m]))) > 0.005
+        for: 2m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: HTTP 5xx error rate exceeded 0.5% SLO threshold
+          description: "HTTP 5xx rate is currently at {{ $value | humanizePercentage }}. Investigate API logs immediately."
+
+      - alert: PostgresPoolSaturated
+        expr: (db_pool_active_connections / 10) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          tier: storage
+        annotations:
+          summary: PostgreSQL connection pool saturation > 80%
+          description: "Active PostgreSQL connections ({{ $value }}) exceed 80% of configured pool capacity for over 2 minutes."
+
+      - alert: P95LatencyBreached
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+          tier: api
+        annotations:
+          summary: HTTP p95 request latency exceeds 500ms
+          description: "HTTP 95th percentile response duration is {{ $value }}s for over 5 minutes. Check database query performance or slow external services."

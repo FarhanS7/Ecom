@@ -20,9 +20,13 @@ import { useRouter } from 'next/navigation';
 import type { ChannelProductDetailDto } from '@shopscale/contracts';
 import { Card, PrimaryButton, RatingBadge, SecondaryButton } from '@/components/ui';
 import { formatPrice } from '@/lib/price';
+import { useCartSafe } from '@/features/cart/cart-context';
 import { productPagePath } from '@/features/catalog/query-state';
 import { VariantPicker } from '@/features/catalog/variant-picker';
 import { purchaseState, resolveVariantId, toVariantView } from '@/features/catalog/variants';
+import { ProductGallery } from '@/features/catalog/gallery';
+import { ProductReviews } from '@/features/catalog/product-reviews';
+import { WishlistHeartButton } from '@/features/wishlist/wishlist-button';
 
 export interface ProductDetailProps {
   product: ChannelProductDetailDto;
@@ -34,10 +38,13 @@ export interface ProductDetailProps {
 
 export function ProductDetail({ product, storeSlug, initialVariantId }: ProductDetailProps) {
   const router = useRouter();
+  const cartContext = useCartSafe();
   const variants = useMemo(() => product.variants.map(toVariantView), [product.variants]);
   const [selectedId, setSelectedId] = useState<string | null>(() =>
     resolveVariantId(variants, initialVariantId),
   );
+  const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   const selected = variants.find((variant) => variant.id === selectedId) ?? variants[0] ?? null;
   const priceLabel = formatPrice(selected?.priceCents ?? product.priceCents, product.currency);
@@ -54,15 +61,24 @@ export function ProductDetail({ product, storeSlug, initialVariantId }: ProductD
     router.replace(`${pagePath}?variant=${encodeURIComponent(variantId)}`, { scroll: false });
   }
 
+  async function handleAddToCart() {
+    if (!selected) return;
+    if (!cartContext) return;
+    setIsAdding(true);
+    setAddError(null);
+    try {
+      await cartContext.addItem(selected.id, 1);
+    } catch (err) {
+      setAddError(err instanceof Error ? err.message : 'Failed to add item to cart');
+    } finally {
+      setIsAdding(false);
+    }
+  }
+
   return (
     <>
       <div className="ss-pdp">
-        <Card className="ss-pdp__media" flush>
-          <span aria-hidden="true" className="ss-pdp__orbit" />
-          <span aria-hidden="true" className="ss-pdp__initial">
-            {product.title.slice(0, 1).toUpperCase()}
-          </span>
-        </Card>
+        <ProductGallery images={product.images ?? []} productTitle={product.title} />
 
         <Card className="ss-pdp__info">
           <p className="type-caption ss-pdp__store">
@@ -79,11 +95,32 @@ export function ProductDetail({ product, storeSlug, initialVariantId }: ProductD
 
           <div className="ss-pdp__buy">
             <PrimaryButton
-              disabled={!purchase.available}
-              describedBy={purchase.reason === null ? undefined : 'pdp-purchase-reason'}
+              disabled={!purchase.available || isAdding}
+              loading={isAdding}
+              onClick={() => {
+                void handleAddToCart();
+              }}
+              describedBy={
+                purchase.reason !== null
+                  ? 'pdp-purchase-reason'
+                  : addError !== null
+                    ? 'pdp-add-error'
+                    : undefined
+              }
             >
               Add to cart
             </PrimaryButton>
+            <WishlistHeartButton productId={product.id} size={20} />
+            {addError ? (
+              <p
+                id="pdp-add-error"
+                className="type-body-sm ss-pdp__reason"
+                role="alert"
+                style={{ color: 'var(--color-danger)' }}
+              >
+                {addError}
+              </p>
+            ) : null}
             {purchase.reason === null ? null : (
               <p id="pdp-purchase-reason" className="type-body-sm ss-pdp__reason">
                 {purchase.reason}
@@ -111,6 +148,8 @@ export function ProductDetail({ product, storeSlug, initialVariantId }: ProductD
           </dl>
         ) : null}
       </Card>
+
+      <ProductReviews productId={product.id} />
     </>
   );
 }

@@ -27,7 +27,11 @@ export async function csrfFetch(
 /** Same-origin gateway requests for any verb (T091b addresses UI). */
 export async function gatewayRequest(
   path: string,
-  init: { method: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown },
+  init: {
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    body?: unknown;
+    headers?: Record<string, string>;
+  },
   fetcher: typeof fetch = fetch,
 ): Promise<Response> {
   if (!isSameOriginPath(path)) {
@@ -37,7 +41,11 @@ export async function gatewayRequest(
   return fetcher(path, {
     method: init.method,
     credentials: 'same-origin',
-    headers: { accept: 'application/json', 'content-type': 'application/json' },
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      ...init.headers,
+    },
     ...(body === undefined ? {} : { body }),
   });
 }

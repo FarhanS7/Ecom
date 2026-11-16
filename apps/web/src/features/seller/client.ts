@@ -14,24 +14,42 @@
 // actions do).
 
 import {
+  adjustStockResponse,
+  invitationResponse,
+  memberResponse,
   productResponse,
+  storeContentSchema,
+  themeTokensSchema,
   variantResponse,
+  z,
 } from '@shopscale/contracts';
 import type {
+  AdjustStockRequest,
+  AdjustStockResponse,
+  InviteStaffDto,
   ProductCreateRequest,
   ProductResponse,
   ProductUpdateRequest,
   PublicationToggleRequest,
+  StoreContentDto,
+  StoreStaffRole,
+  ThemeTokens,
+  UpdateStoreContentDto,
   VariantCreateRequest,
   VariantResponse,
   VariantUpdateRequest,
 } from '@shopscale/contracts';
 import {
   sellerArchivePath,
+  sellerContentPath,
   sellerFetch,
+  sellerInvitationsPath,
+  sellerInventoryAdjustPath,
+  sellerMemberPath,
   sellerProductPath,
   sellerProductsPath,
   sellerPublicationPath,
+  sellerThemePath,
   sellerVariantPath,
   sellerVariantsPath,
   type SellerCall,
@@ -109,5 +127,61 @@ export async function updateVariant(
     sellerVariantPath(storeId, productId, variantId),
     { method: 'PATCH', body: input },
     variantResponse,
+  );
+}
+
+export async function adjustStock(
+  storeId: string,
+  input: AdjustStockRequest,
+): Promise<SellerCall<AdjustStockResponse>> {
+  return sellerFetch(
+    sellerInventoryAdjustPath(storeId),
+    { method: 'POST', body: input },
+    adjustStockResponse,
+  );
+}
+
+export async function saveStoreTheme(
+  storeId: string,
+  theme: ThemeTokens,
+): Promise<SellerCall<{ theme: ThemeTokens }>> {
+  return sellerFetch(
+    sellerThemePath(storeId),
+    { method: 'PUT', body: { theme } },
+    z.object({ theme: themeTokensSchema }),
+  );
+}
+
+export async function saveStoreContent(
+  storeId: string,
+  content: UpdateStoreContentDto,
+): Promise<SellerCall<StoreContentDto>> {
+  return sellerFetch(
+    sellerContentPath(storeId),
+    { method: 'PUT', body: content },
+    storeContentSchema,
+  );
+}
+
+export async function inviteTeamMember(
+  storeId: string,
+  input: InviteStaffDto,
+): Promise<SellerCall<z.infer<typeof invitationResponse>>> {
+  return sellerFetch(
+    sellerInvitationsPath(storeId),
+    { method: 'POST', body: input },
+    invitationResponse,
+  );
+}
+
+export async function updateTeamMember(
+  storeId: string,
+  userId: string,
+  input: { role?: StoreStaffRole; status?: 'active' | 'revoked' },
+): Promise<SellerCall<z.infer<typeof memberResponse>>> {
+  return sellerFetch(
+    sellerMemberPath(storeId, userId),
+    { method: 'PATCH', body: input },
+    memberResponse,
   );
 }

@@ -1,0 +1,29 @@
+{
+  "scenario": "Browse Tier L (100k products)",
+  "datasetSize": 100000,
+  "metrics": {
+    "http_reqs": {
+      "count": 600000,
+      "rate": 1000.0
+    },
+    "http_req_duration": {
+      "avg": 35.8,
+      "min": 1.9,
+      "med": 28.4,
+      "max": 189.6,
+      "p(90)": 68.2,
+      "p(95)": 104.5,
+      "p(99)": 145.8
+    },
+    "http_req_failed": {
+      "passes": 180,
+      "fails": 599820,
+      "value": 0.0003
+    }
+  },
+  "slo": {
+    "targetP95Ms": 150.0,
+    "achievedP95Ms": 104.5,
+    "status": "PASS"
+  }
+}

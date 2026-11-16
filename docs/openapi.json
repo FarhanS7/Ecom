@@ -153,6 +153,26 @@
         }
       }
     },
+    "/v1/seller/stores/{storeId}/team": {
+      "get": {
+        "operationId": "StoresController_getTeam",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/v1/seller/stores/{storeId}/invitations": {
       "post": {
         "operationId": "StoresController_invite",
@@ -201,12 +221,108 @@
         }
       }
     },
+    "/v1/seller/stores/{storeId}/theme": {
+      "get": {
+        "operationId": "StoresController_getTheme",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "StoresController_saveTheme",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/content": {
+      "get": {
+        "operationId": "StoresController_getContent",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "StoresController_saveContent",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/v1/seller-applications": {
       "post": {
         "operationId": "OnboardingController_apply",
         "parameters": [],
         "responses": {
           "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/stores": {
+      "get": {
+        "operationId": "OnboardingController_listStores",
+        "parameters": [
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         }
@@ -664,6 +780,1263 @@
             "name": "productSlug",
             "required": true,
             "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/search": {
+      "get": {
+        "operationId": "SearchController_search",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/search/suggest": {
+      "get": {
+        "operationId": "SearchController_suggest",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/uploads": {
+      "post": {
+        "operationId": "SellerMediaController_createUpload",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/uploads/{assetId}/complete": {
+      "post": {
+        "operationId": "SellerMediaController_completeUpload",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assetId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/products/{productId}/images": {
+      "get": {
+        "operationId": "SellerMediaController_listImages",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "SellerMediaController_attachImage",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/products/{productId}/images/{imageId}": {
+      "delete": {
+        "operationId": "SellerMediaController_deleteImage",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "imageId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/products/{productId}/images/reorder": {
+      "put": {
+        "operationId": "SellerMediaController_reorderImages",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/inventory": {
+      "get": {
+        "operationId": "SellerInventoryController_listInventory",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/inventory/adjust": {
+      "post": {
+        "operationId": "SellerInventoryController_adjustStock",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/inventory/{variantId}/movements": {
+      "get": {
+        "operationId": "SellerInventoryController_getMovements",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/carts/{channelKey}": {
+      "get": {
+        "operationId": "CartController_getCart",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "CartController_clearCart",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/carts/{channelKey}/items": {
+      "post": {
+        "operationId": "CartController_addItem",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/carts/{channelKey}/items/{variantId}": {
+      "patch": {
+        "operationId": "CartController_updateItem",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "CartController_removeItem",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/carts/{channelKey}/merge": {
+      "post": {
+        "operationId": "CartController_mergeCart",
+        "parameters": [
+          {
+            "name": "channelKey",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/test/concurrency-reserve": {
+      "post": {
+        "operationId": "ConcurrencyTestController_concurrencyReserve",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/test/concurrency-seed": {
+      "post": {
+        "operationId": "ConcurrencyTestController_concurrencySeed",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/test/concurrency-stats/{variantId}": {
+      "get": {
+        "operationId": "ConcurrencyTestController_getConcurrencyStats",
+        "parameters": [
+          {
+            "name": "variantId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/checkout/quote": {
+      "post": {
+        "operationId": "CommerceController_calculateQuote",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/checkout": {
+      "post": {
+        "operationId": "CommerceController_initiateCheckout",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/webhooks/payments": {
+      "post": {
+        "operationId": "WebhookController_handlePaymentWebhook",
+        "parameters": [
+          {
+            "name": "x-shopscale-signature",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-shopscale-timestamp",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/orders": {
+      "get": {
+        "operationId": "OrdersController_listCustomerOrders",
+        "parameters": [
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/orders/{id}": {
+      "get": {
+        "operationId": "OrdersController_getCustomerOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/orders/{id}/invoice": {
+      "get": {
+        "operationId": "OrdersController_getOrderInvoice",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/orders/{id}/cancel": {
+      "post": {
+        "operationId": "OrdersController_cancelOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/orders/{id}/returns": {
+      "post": {
+        "operationId": "OrdersController_createReturnRequest",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      },
+      "get": {
+        "operationId": "OrdersController_listReturnRequests",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/orders": {
+      "get": {
+        "operationId": "SellerOrdersController_listSellerOrders",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/orders/{suborderId}": {
+      "get": {
+        "operationId": "SellerOrdersController_getSellerOrder",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "suborderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/orders/{suborderId}/transitions": {
+      "post": {
+        "operationId": "SellerOrdersController_transitionSuborder",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "suborderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/orders/{suborderId}/transition": {
+      "post": {
+        "operationId": "SellerOrdersController_transitionSuborder",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "suborderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/returns": {
+      "get": {
+        "operationId": "SellerReturnsController_listStoreReturns",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/returns/{returnId}/inspect": {
+      "post": {
+        "operationId": "SellerReturnsController_inspectReturn",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "returnId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AuditController_listAuditLogs",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/coupons": {
+      "get": {
+        "operationId": "PromotionsController_listStoreCoupons",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "PromotionsController_createStoreCoupon",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/coupons/validate": {
+      "post": {
+        "operationId": "PromotionsController_validateCoupon",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/coupons": {
+      "get": {
+        "operationId": "PromotionsController_listPlatformCoupons",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "PromotionsController_createPlatformCoupon",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/catalog/products/{productId}/reviews": {
+      "get": {
+        "operationId": "ReviewsController_listReviews",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "ReviewsController_createReview",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/wishlist": {
+      "get": {
+        "operationId": "WishlistController_getWishlist",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/wishlist/{productId}": {
+      "put": {
+        "operationId": "WishlistController_addToWishlist",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "WishlistController_removeFromWishlist",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/seller/stores/{storeId}/analytics": {
+      "get": {
+        "operationId": "AnalyticsController_getStoreAnalytics",
+        "parameters": [
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/analytics": {
+      "get": {
+        "operationId": "AnalyticsController_getPlatformAnalytics",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "topLimit",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/categories": {
+      "get": {
+        "operationId": "CategoriesController_listCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/categories": {
+      "post": {
+        "operationId": "CategoriesController_createCategory",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/categories/{id}/parent": {
+      "put": {
+        "operationId": "CategoriesController_reparentCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/categories/{id}": {
+      "delete": {
+        "operationId": "CategoriesController_deleteCategory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/orders/{orderId}/refund": {
+      "post": {
+        "operationId": "SupportController_issueRefund",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/support/orders/{orderId}/refund": {
+      "post": {
+        "operationId": "SupportController_issueSupportRefund",
+        "parameters": [
+          {
+            "name": "orderId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/feature-flags": {
+      "get": {
+        "operationId": "FeatureFlagsController_listFlags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/admin/feature-flags/{key}": {
+      "get": {
+        "operationId": "FeatureFlagsController_getFlag",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "FeatureFlagsController_setFlag",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/v1/feature-flags/{key}/evaluate": {
+      "get": {
+        "operationId": "FeatureFlagsController_evaluateFlag",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "storeId",
+            "required": true,
+            "in": "query",
             "schema": {
               "type": "string"
             }

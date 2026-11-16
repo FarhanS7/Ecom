@@ -1,0 +1,43 @@
+# Optional OpenSearch infrastructure for comparative search benchmarking (TASK-081).
+# Capped at 1 GB heap to safely execute on 8 GB workstations.
+# Run with: docker compose -f infra/compose.yml -f infra/compose.search.yml up -d opensearch
+
+name: shopscale
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.12.0
+    container_name: shopscale-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx1024m"
+      - bootstrap.memory_lock=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "${OPENSEARCH_PORT:-9200}:9200"
+      - "${OPENSEARCH_PERF_PORT:-9600}:9600"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
+    restart: unless-stopped
+
+volumes:
+  opensearch-data:

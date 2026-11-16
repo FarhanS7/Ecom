@@ -346,6 +346,7 @@ export interface ActionButtonProps {
   /** id of the element explaining a disabled/blocked action (T026b). */
   describedBy?: string | undefined;
   className?: string | undefined;
+  'data-testid'?: string | undefined;
 }
 
 export function ActionButton({
@@ -358,6 +359,7 @@ export function ActionButton({
   loading = false,
   describedBy,
   className,
+  'data-testid': dataTestId,
 }: ActionButtonProps) {
   const busy = loading || disabled;
   const classes = ['ss-btn', variant === 'secondary' ? 'ss-btn--secondary' : 'ss-btn--primary', className]
@@ -381,6 +383,7 @@ export function ActionButton({
         aria-describedby={describedBy}
         onClick={busy ? (e) => e.preventDefault() : onClick}
         tabIndex={busy ? -1 : undefined}
+        data-testid={dataTestId}
       >
         {inner}
       </a>
@@ -394,6 +397,7 @@ export function ActionButton({
       disabled={busy}
       aria-busy={loading}
       aria-describedby={describedBy}
+      data-testid={dataTestId}
     >
       {inner}
     </button>
@@ -416,13 +420,20 @@ export function Tag({
   icon,
   bordered = false,
   hot = false,
+  tone = 'default',
 }: {
   children: ReactNode;
   icon?: ReactNode;
   bordered?: boolean;
   hot?: boolean;
+  tone?: 'default' | 'positive' | 'warning' | 'accent';
 }) {
-  const classes = ['ss-tag', bordered ? 'ss-tag--bordered' : '', hot ? 'ss-tag--hot' : '']
+  const classes = [
+    'ss-tag',
+    bordered ? 'ss-tag--bordered' : '',
+    hot ? 'ss-tag--hot' : '',
+    tone !== 'default' ? `ss-tag--${tone}` : '',
+  ]
     .filter(Boolean)
     .join(' ');
   return (

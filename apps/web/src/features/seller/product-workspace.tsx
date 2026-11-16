@@ -17,6 +17,7 @@ import type { ProductResponse, VariantResponse } from '@shopscale/contracts';
 import { ProductForm } from '@/features/seller/product-form';
 import { VariantTable } from '@/features/seller/variant-table';
 import { PublicationControls } from '@/features/seller/publication-controls';
+import { ProductGalleryEditor } from '@/features/seller/media-uploader';
 
 export interface ProductWorkspaceProps {
   storeId: string;
@@ -38,6 +39,7 @@ export function ProductWorkspace({
   return (
     <div className="ss-console__stack">
       <ProductForm storeId={storeId} product={product} onSaved={setProduct} />
+      <ProductGalleryEditor storeId={storeId} productId={product.id} />
       <VariantTable
         storeId={storeId}
         product={product}

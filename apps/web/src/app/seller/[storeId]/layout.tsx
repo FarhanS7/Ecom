@@ -37,7 +37,13 @@ function ConsoleShell({
         </p>
       </header>
       <nav className="ss-console__nav" aria-label="Store console">
+        <a href={`/seller/${storeId}/dashboard`}>Analytics</a>
         <a href={`/seller/${storeId}/products`}>Products</a>
+        <a href={`/seller/${storeId}/inventory`}>Inventory</a>
+        <a href={`/seller/${storeId}/orders`}>Orders</a>
+        <a href={`/seller/${storeId}/returns`}>Returns</a>
+        <a href={`/seller/${storeId}/coupons`}>Coupons</a>
+        <a href={`/seller/${storeId}/settings`}>Settings</a>
       </nav>
       {children}
     </section>

@@ -1,4 +1,6 @@
 // @shopscale/backend/inventory - Stock invariants, reservations, movement ledger
+export * from './schema.js';
+export * from './inventory.service.js';
 export interface Inventory {
   variantId: string;
   onHand: number;

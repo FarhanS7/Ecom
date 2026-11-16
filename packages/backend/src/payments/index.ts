@@ -1,3 +1,12 @@
+export * from './schema.js';
+export * from './errors.js';
+export * from './financial-ledger.service.js';
+export * from './refund.service.js';
+export * from './settlement.service.js';
+export * from './signature-validator.js';
+export * from './webhook.service.js';
+export * from './reconciliation.service.js';
+
 // @shopscale/backend/payments - Mock provider, webhook ingestion, reconciliation
 export interface Payment {
   id: string;

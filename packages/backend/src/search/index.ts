@@ -1,4 +1,13 @@
 // @shopscale/backend/search - Search projection, typo tolerance, facets
+export * from './projector.js';
+export * from './query-parser.js';
+export * from './query.service.js';
+export * from './autocomplete.service.js';
+export * from './reindex.service.js';
+export * from './search.port.js';
+export * from './opensearch-query-builder.js';
+export * from './opensearch.adapter.js';
+export * from './postgres.adapter.js';
 export interface SearchDocument {
   id: string;
   productId: string;

@@ -58,16 +58,20 @@ describe('variant selection is scoped to one product (T026b)', () => {
   });
 });
 
-describe('the purchase gate (T026b)', () => {
+describe('the purchase gate (T026b, updated T043)', () => {
   it('explains a product with no variant separately from a missing checkout', () => {
     const none = purchaseState({ variants: [] });
     expect(none.available).toBe(false);
     expect(none.reason).toMatch(/no active variant/i);
 
-    const stocked = purchaseState({ variants: [{ id: A }] });
-    expect(stocked.available).toBe(false);
-    expect(stocked.reason).toMatch(/checkout is not connected/i);
+    const disconnected = purchaseState({ variants: [{ id: A }] }, { checkoutConnected: false });
+    expect(disconnected.available).toBe(false);
+    expect(disconnected.reason).toMatch(/checkout is not connected/i);
     // The two reasons are distinct, so the UI cannot show the wrong one.
-    expect(none.reason).not.toBe(stocked.reason);
+    expect(none.reason).not.toBe(disconnected.reason);
+
+    const connected = purchaseState({ variants: [{ id: A }] });
+    expect(connected.available).toBe(true);
+    expect(connected.reason).toBeNull();
   });
 });

@@ -151,6 +151,31 @@ export const channelListResponse = z.object({
 
 export type ChannelListResponse = z.infer<typeof channelListResponse>;
 
+export const productImage = z.object({
+  id: z.string().uuid(),
+  assetId: z.string().uuid(),
+  url: z.string(),
+  displayOrder: z.number().int().default(0),
+  isPrimary: z.boolean().default(false),
+  alt: z.string().default(''),
+});
+
+export type ProductImageDto = z.infer<typeof productImage>;
+
+export const attachProductImageRequest = z.object({
+  assetId: z.string().uuid(),
+  isPrimary: z.boolean().optional().default(false),
+  displayOrder: z.number().int().optional().default(0),
+});
+
+export type AttachProductImageRequest = z.infer<typeof attachProductImageRequest>;
+
+export const reorderProductImagesRequest = z.object({
+  imageIds: z.array(z.string().uuid()),
+});
+
+export type ReorderProductImagesRequest = z.infer<typeof reorderProductImagesRequest>;
+
 export const channelProductDetail = channelProductSummary.extend({
   description: z.string(),
   attributes: z.record(z.unknown()),
@@ -164,6 +189,39 @@ export const channelProductDetail = channelProductSummary.extend({
       attributes: z.record(z.unknown()),
     }),
   ),
+  images: z.array(productImage).default([]),
 });
 
 export type ChannelProductDetailDto = z.infer<typeof channelProductDetail>;
+
+export const categoryDtoSchema = z.object({
+  id: z.string().uuid(),
+  parentId: z.string().uuid().nullable(),
+  slug: z.string().min(1).max(80),
+  name: z.string().min(1).max(100),
+  path: z.string(),
+});
+export type CategoryDto = z.infer<typeof categoryDtoSchema>;
+
+export const categoryListResponseSchema = z.object({
+  items: z.array(categoryDtoSchema),
+});
+export type CategoryListResponseDto = z.infer<typeof categoryListResponseSchema>;
+
+export const createCategoryRequestSchema = z.object({
+  name: z.string().trim().min(1).max(100),
+  slug: z
+    .string()
+    .trim()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  parentId: z.string().uuid().nullable().optional(),
+});
+export type CreateCategoryRequestDto = z.infer<typeof createCategoryRequestSchema>;
+
+export const reparentCategoryRequestSchema = z.object({
+  parentId: z.string().uuid().nullable(),
+});
+export type ReparentCategoryRequestDto = z.infer<typeof reparentCategoryRequestSchema>;
+

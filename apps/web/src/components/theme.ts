@@ -14,6 +14,7 @@ import { DEFAULT_THEME, themeTokensSchema } from '@shopscale/contracts';
 import type { ThemeTokens } from '@shopscale/contracts';
 
 export type { ThemeTokens };
+export { DEFAULT_THEME };
 
 /** True only for data matching the closed token contract exactly. */
 export function isValidTheme(raw: unknown): boolean {

@@ -81,20 +81,22 @@ export interface PurchaseState {
 }
 
 /**
- * Inventory arrives with T032 and the cart with T033, so nothing is purchasable
- * yet. Both reasons are honest and distinct: a product with no active variant
- * is not a checkout problem. When the cart lands, only CHECKOUT_CONNECTED flips.
+ * Cart connection wired in T043. Both reasons are honest and distinct: a
+ * product with no active variant is not a checkout problem. When stocked
+ * variants exist and cart is connected, available is true.
  */
-const CHECKOUT_CONNECTED = false;
-
-export function purchaseState(product: { variants: Array<unknown> }): PurchaseState {
+export function purchaseState(
+  product: { variants: Array<unknown> },
+  options: { checkoutConnected?: boolean } = {},
+): PurchaseState {
+  const checkoutConnected = options.checkoutConnected ?? true;
   if (product.variants.length === 0) {
     return {
       available: false,
       reason: 'This product has no active variant available to order yet.',
     };
   }
-  if (!CHECKOUT_CONNECTED) {
+  if (!checkoutConnected) {
     return { available: false, reason: 'Checkout is not connected yet.' };
   }
   return { available: true, reason: null };

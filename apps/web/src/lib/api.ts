@@ -24,6 +24,19 @@ export const ALLOWED_GATEWAY_PATHS = [
   'v1/auth/password-reset/confirm',
   'v1/auth/verify-email/request',
   'v1/auth/verify-email/confirm',
+  'v1/search',
+  'v1/search/suggest',
+  'v1/checkout/quote',
+  'v1/checkout',
+  'v1/orders',
+  'v1/admin/audit-logs',
+  'v1/coupons/validate',
+  'v1/admin/coupons',
+  'v1/wishlist',
+  'v1/admin/analytics',
+  'v1/admin/stores',
+  'v1/categories',
+  'v1/admin/categories',
 ] as const;
 
 export type AllowedGatewayPath = (typeof ALLOWED_GATEWAY_PATHS)[number];
@@ -34,7 +47,7 @@ export type AllowedGatewayPath = (typeof ALLOWED_GATEWAY_PATHS)[number];
  * capped at one extra segment and every segment keeps the strict character
  * rule, so this cannot smuggle traversal or absolute URLs.
  */
-export const ALLOWED_GATEWAY_PREFIXES = ['v1/me/addresses'] as const;
+export const ALLOWED_GATEWAY_PREFIXES = ['v1/me/addresses', 'v1/orders', 'v1/wishlist'] as const;
 
 /**
  * Path TEMPLATES for deep routes (T025a): each segment is either literal or a
@@ -46,6 +59,40 @@ export const ALLOWED_GATEWAY_PREFIXES = ['v1/me/addresses'] as const;
 export const ALLOWED_GATEWAY_TEMPLATES = [
   'v1/catalog/marketplace/products',
   'v1/catalog/stores/{slug}/products',
+  'v1/seller/stores/{id}/uploads',
+  'v1/seller/stores/{id}/uploads/{assetId}/complete',
+  'v1/seller/stores/{id}/products/{productId}/images',
+  'v1/seller/stores/{id}/products/{productId}/images/{imageId}',
+  'v1/seller/stores/{id}/products/{productId}/images/reorder',
+  'v1/seller/stores/{id}/inventory',
+  'v1/seller/stores/{id}/inventory/adjust',
+  'v1/seller/stores/{id}/inventory/{variantId}/movements',
+  'v1/carts/{channelKey}',
+  'v1/carts/{channelKey}/items',
+  'v1/carts/{channelKey}/items/{variantId}',
+  'v1/carts/{channelKey}/merge',
+  'v1/seller/stores/{id}/orders',
+  'v1/seller/stores/{id}/orders/{suborderId}',
+  'v1/seller/stores/{id}/orders/{suborderId}/transitions',
+  'v1/orders/{id}/cancel',
+  'v1/orders/{id}/returns',
+  'v1/orders/{id}/invoice',
+  'v1/seller/stores/{id}/returns',
+  'v1/seller/stores/{id}/returns/{returnId}/inspect',
+  'v1/seller/stores/{id}/coupons',
+  'v1/catalog/products/{id}/reviews',
+  'v1/seller/stores/{id}/analytics',
+  'v1/seller/stores/{id}/team',
+  'v1/seller/stores/{id}/invitations',
+  'v1/seller/stores/{id}/members/{userId}',
+  'v1/seller/stores/{id}/theme',
+  'v1/seller/stores/{id}/content',
+  'v1/admin/stores/{id}/approve',
+  'v1/admin/stores/{id}/suspend',
+  'v1/admin/categories/{id}/parent',
+  'v1/admin/categories/{id}',
+  'v1/admin/orders/{id}/refund',
+  'v1/support/orders/{id}/refund',
 ] as const;
 
 /** Server-only API origin. Names the variable on failure, never its value. */
@@ -115,7 +162,7 @@ export function resolveOutgoingRequestId(header: string | null): string {
   return crypto.randomUUID();
 }
 
-const FORWARDED_COOKIES = ['access_token', 'refresh_token'] as const;
+const FORWARDED_COOKIES = ['access_token', 'refresh_token', 'cart_guest_token'] as const;
 
 /**
  * Rebuild a Cookie header from exact-name session matches only (T017a).

@@ -12,6 +12,26 @@ import { ChannelController } from './channel.controller.js';
 import { AddressesController } from './addresses.controller.js';
 import { ProductController } from './product.controller.js';
 import { CatalogController } from './catalog.controller.js';
+import { SearchController } from './search.controller.js';
+import { SellerMediaController } from './seller-media.controller.js';
+import { SellerInventoryController } from './seller-inventory.controller.js';
+import { CartController } from './cart.controller.js';
+import { ConcurrencyTestController } from './concurrency-test.controller.js';
+import { CommerceController } from './commerce.controller.js';
+import { WebhookController } from './webhook.controller.js';
+import {
+  OrdersController,
+  SellerOrdersController,
+  SellerReturnsController,
+} from './orders.controller.js';
+import { AuditController } from './audit.controller.js';
+import { PromotionsController } from './promotions.controller.js';
+import { ReviewsController } from './reviews.controller.js';
+import { WishlistController } from './wishlist.controller.js';
+import { AnalyticsController } from './analytics.controller.js';
+import { CategoriesController } from './categories.controller.js';
+import { SupportController } from './support.controller.js';
+import { FeatureFlagsController } from './feature-flags.controller.js';
 
 @Module({
   imports: [
@@ -35,7 +55,35 @@ import { CatalogController } from './catalog.controller.js';
     // ReportingModule,
     // EngagementModule,
   ],
-  controllers: [HealthController, PingController, AuthController, StoresController, OnboardingController, ChannelController, AddressesController, ProductController, CatalogController],
+  controllers: [
+    HealthController,
+    PingController,
+    AuthController,
+    StoresController,
+    OnboardingController,
+    ChannelController,
+    AddressesController,
+    ProductController,
+    CatalogController,
+    SearchController,
+    SellerMediaController,
+    SellerInventoryController,
+    CartController,
+    ConcurrencyTestController,
+    CommerceController,
+    WebhookController,
+    OrdersController,
+    SellerOrdersController,
+    SellerReturnsController,
+    AuditController,
+    PromotionsController,
+    ReviewsController,
+    WishlistController,
+    AnalyticsController,
+    CategoriesController,
+    SupportController,
+    FeatureFlagsController,
+  ],
   providers: [HealthProbeService],
 })
 export class AppModule {}

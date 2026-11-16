@@ -1,19 +1,49 @@
-// @shopscale/api/stores.controller - Minimal scoped store reads (T014b).
-// Self-membership read only: answers "what is MY membership in this store".
+// @shopscale/api/stores.controller - Scoped store reads and settings management (T014b, T068).
+// Self-membership read, team management, theme customizer, and store content.
 // Non-members AND unknown stores share one generic 404 (no existence oracle),
 // and scope is re-checked live per request — a valid JWT with a revoked
-// membership is denied (proven by the store-scope HTTP suite).
+// membership is denied.
 
-import { Body, ConflictException, Controller, ForbiddenException, Get, HttpCode, NotFoundException, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
-import { OnboardingError, getMembership, inviteMember, updateMember } from '@shopscale/backend';
+import {
+  OnboardingError,
+  authorizeStore,
+  getMembership,
+  getStoreContent,
+  getTheme,
+  inviteMember,
+  listStoreTeam,
+  saveStoreContent,
+  saveTheme,
+  updateMember,
+} from '@shopscale/backend';
 import type { Actor } from '@shopscale/backend';
 import {
   invitationCreateRequest,
   invitationResponse,
   memberResponse,
   memberUpdateRequest,
+  storeContentSchema,
   storeMembershipResponse,
+  storeTeamSummarySchema,
+  themeTokensSchema,
+  updateStoreContentSchema,
+  updateStoreThemeSchema,
 } from '@shopscale/contracts';
 import { SessionGuard } from './session.guard.js';
 
@@ -59,6 +89,22 @@ export class StoresController {
     });
   }
 
+  @Get(':storeId/team')
+  async getTeam(
+    @Req() req: GuardedRequest,
+    @Param('storeId') storeId: string,
+  ): Promise<unknown> {
+    if (!req.actor || !UUID_PATTERN.test(storeId)) {
+      throw new NotFoundException('Store not found.');
+    }
+    try {
+      const team = await listStoreTeam({ storeId, actorId: req.actor.userId });
+      return storeTeamSummarySchema.parse(team);
+    } catch (err) {
+      toOnboardingError(err);
+    }
+  }
+
   @Post(':storeId/invitations')
   @HttpCode(201)
   async invite(
@@ -69,9 +115,6 @@ export class StoresController {
     if (!req.actor || !UUID_PATTERN.test(storeId)) {
       throw new NotFoundException('Store not found.');
     }
-    // Malformed bodies share the generic 404 on scoped routes (deliberate
-    // deviation from the 422 convention): distinguishing "bad input" from
-    // "no such store / no membership" would oracle store existence.
     const parsed = invitationCreateRequest.safeParse(rawBody);
     if (!parsed.success) {
       throw new NotFoundException('Store not found.');
@@ -101,8 +144,6 @@ export class StoresController {
     if (!req.actor || !UUID_PATTERN.test(storeId) || !UUID_PATTERN.test(userId)) {
       throw new NotFoundException('Store not found.');
     }
-    // Same no-oracle rule as above: malformed input is indistinguishable
-    // from missing scope on these routes.
     const parsed = memberUpdateRequest.safeParse(rawBody);
     if (!parsed.success) {
       throw new NotFoundException('Store not found.');
@@ -117,6 +158,99 @@ export class StoresController {
         requestId: requestIdOf(req),
       });
       return memberResponse.parse(out);
+    } catch (err) {
+      toOnboardingError(err);
+    }
+  }
+
+  @Get(':storeId/theme')
+  async getTheme(
+    @Req() req: GuardedRequest,
+    @Param('storeId') storeId: string,
+  ): Promise<unknown> {
+    if (!req.actor || !UUID_PATTERN.test(storeId)) {
+      throw new NotFoundException('Store not found.');
+    }
+    const canRead =
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'catalog:manage' })) ||
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'team:manage' })) ||
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'store:manage' }));
+
+    if (!canRead) throw new NotFoundException('Store not found.');
+
+    const theme = await getTheme(storeId);
+    return { theme: themeTokensSchema.parse(theme) };
+  }
+
+  @Put(':storeId/theme')
+  @HttpCode(200)
+  async saveTheme(
+    @Req() req: GuardedRequest,
+    @Param('storeId') storeId: string,
+    @Body() rawBody: unknown,
+  ): Promise<unknown> {
+    if (!req.actor || !UUID_PATTERN.test(storeId)) {
+      throw new NotFoundException('Store not found.');
+    }
+    const parsed = updateStoreThemeSchema.safeParse(rawBody);
+    const tokens = parsed.success ? parsed.data.theme : themeTokensSchema.safeParse(rawBody).data;
+    if (!tokens) {
+      throw new NotFoundException('Store not found.');
+    }
+    try {
+      const saved = await saveTheme({
+        storeId,
+        actorId: req.actor.userId,
+        tokens,
+        requestId: requestIdOf(req),
+      });
+      return { theme: themeTokensSchema.parse(saved) };
+    } catch (err) {
+      toOnboardingError(err);
+    }
+  }
+
+  @Get(':storeId/content')
+  async getContent(
+    @Req() req: GuardedRequest,
+    @Param('storeId') storeId: string,
+  ): Promise<unknown> {
+    if (!req.actor || !UUID_PATTERN.test(storeId)) {
+      throw new NotFoundException('Store not found.');
+    }
+    const canRead =
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'catalog:manage' })) ||
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'team:manage' })) ||
+      (await authorizeStore({ userId: req.actor.userId, storeId, permission: 'store:manage' }));
+
+    if (!canRead) throw new NotFoundException('Store not found.');
+
+    const content = await getStoreContent(storeId);
+    return storeContentSchema.parse(content);
+  }
+
+  @Put(':storeId/content')
+  @HttpCode(200)
+  async saveContent(
+    @Req() req: GuardedRequest,
+    @Param('storeId') storeId: string,
+    @Body() rawBody: unknown,
+  ): Promise<unknown> {
+    if (!req.actor || !UUID_PATTERN.test(storeId)) {
+      throw new NotFoundException('Store not found.');
+    }
+    const parsed = updateStoreContentSchema.safeParse(rawBody);
+    if (!parsed.success) {
+      throw new NotFoundException('Store not found.');
+    }
+    try {
+      const saved = await saveStoreContent({
+        storeId,
+        actorId: req.actor.userId,
+        content: parsed.data,
+        requestId: requestIdOf(req),
+      });
+      return storeContentSchema.parse(saved);
     } catch (err) {
       toOnboardingError(err);
     }

@@ -11,6 +11,7 @@ import {
   AuthError,
   authenticateAccount,
   buildProblem,
+  cartService,
   confirmPasswordReset,
   confirmVerification,
   consumeLimit,
@@ -244,6 +245,22 @@ export class AuthController {
     try {
       const issued = await authenticateAccount({ email: body.email, password: body.password });
       issueAuthCookies(res, issued);
+
+      // T042: Trigger cart merge if guest token cookie is present
+      const rawCookie = firstHeader(req.headers?.['cookie']);
+      const guestToken = extractCookie(rawCookie, 'cart_guest_token');
+      if (guestToken) {
+        try {
+          await cartService.mergeGuestCart(
+            { kind: 'user', id: issued.user.id },
+            guestToken,
+            'marketplace',
+          );
+        } catch {
+          // Gracefully continue so login succeeds even if guest cart merge was already completed or token was expired
+        }
+      }
+
       return authResponse.parse({ user: issued.user, expiresIn: issued.expiresIn });
     } catch (err) {
       toAuthErrorResponse(err);

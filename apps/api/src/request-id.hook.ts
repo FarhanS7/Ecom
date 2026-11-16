@@ -2,11 +2,20 @@
 // Kept adapter-structural (no fastify import): the instance from
 // getHttpAdapter().getInstance() satisfies these shapes at runtime.
 
-import { REQUEST_ID_HEADER, buildProblem, resolveRequestId } from '@shopscale/backend';
+import {
+  REQUEST_ID_HEADER,
+  TRACEPARENT_HEADER,
+  buildProblem,
+  extractTraceContext,
+  resolveRequestId,
+} from '@shopscale/backend';
 
 interface HookRequest {
   headers: Record<string, string | string[] | undefined>;
   requestId?: string;
+  traceId?: string;
+  traceparent?: string;
+  startTime?: bigint;
   method?: string;
   url?: string;
 }
@@ -21,8 +30,8 @@ type Done = (err?: Error) => void;
 
 /**
  * onRequest hook: valid header → attach + echo; invalid → 400 problem;
- * missing → generated UUID. Every downstream handler and the problem filter
- * can rely on req.requestId being present.
+ * missing → generated UUID. Also extracts and propagates W3C traceparent context.
+ * Every downstream handler and the problem filter can rely on req.requestId and req.traceId.
  */
 export function requestIdHook(req: HookRequest, reply: HookReply, done: Done): void {
   const resolved = resolveRequestId(req.headers ?? {});
@@ -40,7 +49,15 @@ export function requestIdHook(req: HookRequest, reply: HookReply, done: Done): v
     done();
     return;
   }
+
+  const traceContext = extractTraceContext(req.headers ?? {});
+
+  req.startTime = process.hrtime.bigint();
   req.requestId = resolved.requestId;
+  req.traceId = traceContext.traceId;
+  req.traceparent = traceContext.traceparent;
+
   reply.header(REQUEST_ID_HEADER, resolved.requestId);
+  reply.header(TRACEPARENT_HEADER, traceContext.traceparent);
   done();
 }

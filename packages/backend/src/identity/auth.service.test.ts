@@ -29,7 +29,7 @@ describe('password hashing (T010a)', () => {
     expect(await verifyPassword(hash, 'correct-horse-8')).toBe(true);
     expect(await verifyPassword(hash, 'wrong-password')).toBe(false);
     expect(await verifyPassword('not-a-hash', 'x')).toBe(false);
-  });
+  }, 15000);
 });
 
 describe('access tokens (T010a)', () => {

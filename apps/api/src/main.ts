@@ -12,10 +12,11 @@ import type { ValidationError } from 'class-validator';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { getEnv, resetEnvCache } from '@shopscale/config';
 import type { Env } from '@shopscale/config';
-import { SECURITY_HEADERS } from '@shopscale/backend';
+import { metricsService, SECURITY_HEADERS } from '@shopscale/backend';
 import { AppModule } from './app.module.js';
 import { ProblemFilter } from './problem.filter.js';
 import { requestIdHook } from './request-id.hook.js';
+import { initTracing, shutdownTracing } from './tracing.js';
 
 /**
  * Single application creation path for production and tests.
@@ -30,6 +31,7 @@ export async function createApp(): Promise<{ app: NestFastifyApplication; env: E
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter({ logger: true }),
+    { rawBody: true },
   );
 
   // Versioned business API; health/docs/metrics stay unversioned per
@@ -85,18 +87,49 @@ export async function createApp(): Promise<{ app: NestFastifyApplication; env: E
       done(null, payload);
     },
   );
+  fastify.addHook(
+    'onResponse',
+    (
+      req: { startTime?: bigint; method?: string; url?: string },
+      reply: { statusCode?: number },
+      done: (err?: Error) => void,
+    ) => {
+      const start = req.startTime;
+      const durationSeconds = start
+        ? Number(process.hrtime.bigint() - start) / 1e9
+        : 0;
+      const method = req.method ?? 'GET';
+      const url = req.url ?? '/';
+      const statusCode = reply.statusCode ?? 200;
+      metricsService.recordHttpRequestDuration(method, url, statusCode, durationSeconds);
+      done();
+    },
+  );
 
   // Unknown routes flow through Nest's own not-found handling into the
   // global ProblemFilter (single-handler limit on the Fastify adapter), so
   // they share the same problem contract — proven by the 404 test.
 
   // Health routes live on HealthController (platform logic in @shopscale/backend).
-  app.getHttpAdapter().get('/metrics', () => ({ /* Prometheus metrics arrive in T072 */ }));
+  app.getHttpAdapter().get(
+    '/metrics',
+    async (
+      _req: unknown,
+      reply: {
+        header: (name: string, value: string) => unknown;
+        send: (payload: unknown) => unknown;
+      },
+    ) => {
+      reply.header('Content-Type', metricsService.getContentType());
+      return reply.send(await metricsService.getMetrics());
+    },
+  );
 
   return { app, env };
 }
 
 async function bootstrap() {
+  initTracing('shopscale-api');
   const { app, env } = await createApp();
 
   // OpenAPI docs are wired here (production entry), not in createApp():
@@ -115,6 +148,9 @@ async function bootstrap() {
 
   await app.listen(env.PORT, '0.0.0.0');
   console.log(`API listening on port ${env.PORT}`);
+
+  process.on('SIGTERM', () => void shutdownTracing());
+  process.on('SIGINT', () => void shutdownTracing());
 }
 
 // Auto-run only as the process entry point (node dist/main.js), so tests can

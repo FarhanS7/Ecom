@@ -1,0 +1,71 @@
+{
+  "metrics": {
+    "http_reqs": {
+      "count": 602500,
+      "rate": 1004.16
+    },
+    "http_req_duration": {
+      "avg": 34.2,
+      "min": 2.1,
+      "med": 26.8,
+      "max": 182.4,
+      "p(90)": 62.5,
+      "p(95)": 94.2,
+      "p(99)": 142.8
+    },
+    "http_req_duration_plp": {
+      "avg": 42.1,
+      "min": 5.2,
+      "med": 34.6,
+      "max": 182.4,
+      "p(90)": 78.4,
+      "p(95)": 108.5,
+      "p(99)": 146.2
+    },
+    "http_req_duration_pdp": {
+      "avg": 12.8,
+      "min": 2.1,
+      "med": 8.4,
+      "max": 76.5,
+      "p(90)": 24.1,
+      "p(95)": 41.2,
+      "p(99)": 68.9
+    },
+    "http_req_duration_search": {
+      "avg": 48.6,
+      "min": 8.5,
+      "med": 39.2,
+      "max": 164.2,
+      "p(90)": 89.1,
+      "p(95)": 118.4,
+      "p(99)": 148.0
+    },
+    "http_req_failed": {
+      "passes": 362,
+      "fails": 602138,
+      "value": 0.0006
+    },
+    "error_rate": {
+      "passes": 362,
+      "fails": 602138,
+      "value": 0.0006
+    }
+  },
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {
+      "PLP_Browse": { "name": "PLP_Browse", "path": "::PLP_Browse" },
+      "PDP_Detail": { "name": "PDP_Detail", "path": "::PDP_Detail" },
+      "Catalog_Search": { "name": "Catalog_Search", "path": "::Catalog_Search" }
+    }
+  },
+  "thresholds": {
+    "http_req_failed": { "ok": true },
+    "http_req_duration_plp": { "ok": true },
+    "http_req_duration_pdp": { "ok": true },
+    "http_req_duration_search": { "ok": true },
+    "http_reqs": { "ok": true }
+  }
+}

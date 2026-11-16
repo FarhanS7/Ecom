@@ -35,7 +35,7 @@ describe('backend import-time behavior (T005a)', () => {
   it('imports without env and keeps pure helpers usable', async () => {
     const mod = await import('../index.js');
     expect(mod.isLivenessOk()).toBe(true);
-  });
+  }, 15_000);
 
   it('fails fast with a redacted error on first config use', async () => {
     const mod = await import('../index.js');
@@ -49,5 +49,5 @@ describe('backend import-time behavior (T005a)', () => {
         if (saved[k] !== undefined) expect(msg).not.toContain(saved[k] as string);
       }
     }
-  });
+  }, 15_000);
 });

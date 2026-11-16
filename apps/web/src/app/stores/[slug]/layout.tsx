@@ -11,6 +11,7 @@
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { TenantScope } from '@/components/ui';
+import { CartDrawer, CartProvider } from '@/features/cart';
 import { loadStoreChannel } from '@/features/storefront/load';
 
 export const dynamic = 'force-dynamic';
@@ -26,11 +27,14 @@ export default async function StoreLayout({
   if (!channel) notFound();
 
   return (
-    <TenantScope theme={channel.theme} testId="store-theme" dataStore={channel.slug}>
-      <p>
-        <a href="/">← Marketplace</a>
-      </p>
-      {children}
-    </TenantScope>
+    <CartProvider channelKey={channel.slug}>
+      <TenantScope theme={channel.theme} testId="store-theme" dataStore={channel.slug}>
+        <p>
+          <a href="/">← Marketplace</a>
+        </p>
+        {children}
+      </TenantScope>
+      <CartDrawer />
+    </CartProvider>
   );
 }

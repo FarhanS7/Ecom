@@ -1,0 +1,42 @@
+{
+  "metrics": {
+    "http_reqs": {
+      "count": 185420,
+      "rate": 309.03
+    },
+    "search_duration": {
+      "avg": 54.3,
+      "min": 8.1,
+      "med": 42.6,
+      "max": 188.4,
+      "p(90)": 98.7,
+      "p(95)": 126.8,
+      "p(99)": 147.2
+    },
+    "autocomplete_duration": {
+      "avg": 14.2,
+      "min": 1.8,
+      "med": 9.5,
+      "max": 58.2,
+      "p(90)": 28.4,
+      "p(95)": 38.6,
+      "p(99)": 48.9
+    },
+    "http_req_failed": {
+      "passes": 112,
+      "fails": 185308,
+      "value": 0.0006
+    },
+    "search_errors": {
+      "passes": 112,
+      "fails": 185308,
+      "value": 0.0006
+    }
+  },
+  "thresholds": {
+    "search_duration": { "ok": true },
+    "autocomplete_duration": { "ok": true },
+    "search_errors": { "ok": true },
+    "http_req_failed": { "ok": true }
+  }
+}

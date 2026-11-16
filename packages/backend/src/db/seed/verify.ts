@@ -21,11 +21,13 @@ import { canonicalJson } from './random.js';
 import type { IdentityPlan } from './identity.js';
 import type { CatalogPlan } from './catalog.js';
 import type { ThemePlan } from './themes.js';
+import type { OrdersPlan } from './orders.js';
 
 export interface SeedPlanBundle {
   identity: IdentityPlan;
   catalog: CatalogPlan;
   themes: ThemePlan;
+  orders?: OrdersPlan;
 }
 
 // --- pure digests over the plan ------------------------------------------
@@ -57,6 +59,13 @@ export function planChecksums(plan: SeedPlanBundle): Record<string, string> {
     store_themes: plan.themes.themes as unknown as Array<Record<string, unknown>>,
     store_content: plan.themes.content as unknown as Array<Record<string, unknown>>,
   };
+  if (plan.orders) {
+    tables['inventory'] = plan.orders.inventory as unknown as Array<Record<string, unknown>>;
+    tables['orders'] = plan.orders.orders as unknown as Array<Record<string, unknown>>;
+    tables['seller_orders'] = plan.orders.sellerOrders as unknown as Array<Record<string, unknown>>;
+    tables['order_items'] = plan.orders.orderItems as unknown as Array<Record<string, unknown>>;
+    tables['reviews'] = plan.orders.reviews as unknown as Array<Record<string, unknown>>;
+  }
   const digests: Record<string, string> = {};
   for (const [table, rows] of Object.entries(tables)) {
     const digest = createHash('md5');
@@ -460,6 +469,11 @@ export async function distributionFacts(sql: Sql): Promise<DistributionFacts> {
  * Order matters: children before parents.
  */
 export async function cleanupSeedData(sql: Sql): Promise<void> {
+  await sql.unsafe(`DELETE FROM "reviews" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" LIKE 'seed-%');`);
+  await sql.unsafe(`DELETE FROM "order_items" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" LIKE 'seed-%');`);
+  await sql.unsafe(`DELETE FROM "seller_orders" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" LIKE 'seed-%');`);
+  await sql.unsafe(`DELETE FROM "orders" WHERE "user_id" IN (SELECT "id" FROM "users" WHERE "email_normalized" LIKE 'seed.%');`);
+  await sql.unsafe(`DELETE FROM "inventory" WHERE "store_id" IN (SELECT "id" FROM "stores" WHERE "slug" LIKE 'seed-%');`);
   await sql.unsafe(
     `DELETE FROM "product_publications" WHERE "product_id" IN (SELECT "id" FROM "products" WHERE "slug" LIKE 'seed-%');`,
   );

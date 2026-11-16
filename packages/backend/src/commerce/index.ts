@@ -1,4 +1,15 @@
 // @shopscale/backend/commerce - Checkout, orders, seller suborders, fulfillment, returns, refunds
+export * from './errors.js';
+export * from './quote.service.js';
+export * from './checkout.service.js';
+export * from './order-completion.js';
+export * from './order-query.service.js';
+export * from './pii-masker.js';
+export * from './fulfillment-fsm.js';
+export * from './fulfillment.service.js';
+export * from './returns.service.js';
+export * from './schema.js';
+
 export interface Order {
   id: string;
   userId: string;

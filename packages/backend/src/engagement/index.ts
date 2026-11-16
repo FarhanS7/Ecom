@@ -1,4 +1,7 @@
 // @shopscale/backend/engagement - Coupons, reviews, wishlists
+export * from './errors.js';
+export * from './review.service.js';
+export * from './wishlist.service.js';
 export interface Coupon {
   id: string;
   code: string;

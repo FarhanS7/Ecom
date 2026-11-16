@@ -1,0 +1,132 @@
+{
+  "totalDurationMinutes": 60,
+  "totalRequests": 720000,
+  "errorRate": 0.00019,
+  "initialHeapMb": 142.5,
+  "peakHeapMb": 174.1,
+  "finalHeapMb": 173.6,
+  "heapDriftMbPerHour": 1.91,
+  "hasMemoryLeak": false,
+  "maxDbConnectionsUsed": 8,
+  "dbPoolStarvationCount": 0,
+  "deadlockCount": 0,
+  "intervals": [
+    {
+      "minute": 0,
+      "heapUsedMb": 142.5,
+      "rssMb": 210.4,
+      "activeDbConnections": 4,
+      "waitingConnections": 0,
+      "p95LatencyMs": 98.2,
+      "lockWaitMs": 0
+    },
+    {
+      "minute": 5,
+      "heapUsedMb": 168.2,
+      "rssMb": 245.1,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 112.5,
+      "lockWaitMs": 1.2
+    },
+    {
+      "minute": 10,
+      "heapUsedMb": 172.4,
+      "rssMb": 251,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 108.4,
+      "lockWaitMs": 1.8
+    },
+    {
+      "minute": 15,
+      "heapUsedMb": 171.8,
+      "rssMb": 250.8,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 109.1,
+      "lockWaitMs": 2.1
+    },
+    {
+      "minute": 20,
+      "heapUsedMb": 173.1,
+      "rssMb": 252.4,
+      "activeDbConnections": 7,
+      "waitingConnections": 0,
+      "p95LatencyMs": 107.6,
+      "lockWaitMs": 1.5
+    },
+    {
+      "minute": 25,
+      "heapUsedMb": 172,
+      "rssMb": 251.5,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 106.9,
+      "lockWaitMs": 2.4
+    },
+    {
+      "minute": 30,
+      "heapUsedMb": 173.5,
+      "rssMb": 253,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 108,
+      "lockWaitMs": 2
+    },
+    {
+      "minute": 35,
+      "heapUsedMb": 172.9,
+      "rssMb": 252.2,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 107.4,
+      "lockWaitMs": 1.9
+    },
+    {
+      "minute": 40,
+      "heapUsedMb": 174.1,
+      "rssMb": 253.8,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 108.9,
+      "lockWaitMs": 3.1
+    },
+    {
+      "minute": 45,
+      "heapUsedMb": 173.2,
+      "rssMb": 252.6,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 107.8,
+      "lockWaitMs": 1.7
+    },
+    {
+      "minute": 50,
+      "heapUsedMb": 173.8,
+      "rssMb": 253.4,
+      "activeDbConnections": 7,
+      "waitingConnections": 0,
+      "p95LatencyMs": 108.1,
+      "lockWaitMs": 2.2
+    },
+    {
+      "minute": 55,
+      "heapUsedMb": 173.4,
+      "rssMb": 253.1,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 107.5,
+      "lockWaitMs": 1.8
+    },
+    {
+      "minute": 60,
+      "heapUsedMb": 173.6,
+      "rssMb": 253.2,
+      "activeDbConnections": 8,
+      "waitingConnections": 0,
+      "p95LatencyMs": 107.9,
+      "lockWaitMs": 2
+    }
+  ]
+}

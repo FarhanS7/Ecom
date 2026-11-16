@@ -11,6 +11,7 @@ export interface Notification {
   createdAt: Date;
   sentAt: Date | null;
 }
+// @shopscale/backend/notifications - Email/SMS workers, invoice PDF, retry + DLQ (T061).
 
 export interface Invoice {
   id: string;
@@ -33,3 +34,7 @@ export const notificationPorts: NotificationPorts = {
   generateInvoice() { return Promise.reject(new Error('Not implemented')); },
   processQueue() { return Promise.reject(new Error('Not implemented')); },
 };
+export * from './schema.js';
+export * from './errors.js';
+export * from './notification.service.js';
+export * from './invoice.service.js';

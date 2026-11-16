@@ -144,3 +144,75 @@ export function findMigrationsDir(startDir: string): string {
   }
   throw new Error(`Could not locate db/migrations by walking up from ${startDir}.`);
 }
+
+/**
+ * Port contract for dual connection pools separating write transactions from read queries (TASK-082).
+ */
+export interface ReplicaPoolPort {
+  getPrimary(): Sql;
+  getReplica(): Sql;
+  isReplicaConfigured(): boolean;
+  close(): Promise<void>;
+}
+
+/**
+ * Dual connection pool router directing write operations to the primary instance
+ * and read-only analytical/reporting queries to the read replica pool if configured.
+ * Defaults gracefully to the primary pool if READ_REPLICA_URL is not set.
+ */
+export class DualPoolRouter implements ReplicaPoolPort {
+  private primarySql: Sql | null = null;
+  private replicaSql: Sql | null = null;
+
+  constructor(
+    private readonly primaryUrl?: string,
+    private readonly replicaUrl?: string,
+  ) {}
+
+  getPrimary(): Sql {
+    if (!this.primarySql) {
+      const url = this.primaryUrl ?? requireDatabaseUrl();
+      this.primarySql = postgres(url, {
+        max: 10,
+        idle_timeout: 20,
+        connect_timeout: 10,
+        prepare: false,
+        onnotice: () => {},
+      });
+    }
+    return this.primarySql;
+  }
+
+  getReplica(): Sql {
+    const configuredUrl = this.replicaUrl ?? process.env['READ_REPLICA_URL'];
+    if (configuredUrl) {
+      if (!this.replicaSql) {
+        this.replicaSql = postgres(configuredUrl, {
+          max: 10,
+          idle_timeout: 20,
+          connect_timeout: 10,
+          prepare: false,
+          onnotice: () => {},
+        });
+      }
+      return this.replicaSql;
+    }
+    return this.getPrimary();
+  }
+
+  isReplicaConfigured(): boolean {
+    return Boolean(this.replicaUrl ?? process.env['READ_REPLICA_URL']);
+  }
+
+  async close(): Promise<void> {
+    if (this.replicaSql) {
+      await this.replicaSql.end();
+      this.replicaSql = null;
+    }
+    if (this.primarySql) {
+      await this.primarySql.end();
+      this.primarySql = null;
+    }
+  }
+}
+

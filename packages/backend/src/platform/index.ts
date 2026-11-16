@@ -2,27 +2,41 @@
 // Configuration, transaction boundary, telemetry bootstrap, AuditWriter port
 
 import { getDb } from '../db/client.js';
+import type { Queryable } from '../identity/auth.service.js';
 
 export { getEnv } from '@shopscale/config';
 export { getDb } from '../db/client.js';
 
+export type SqlClient = ReturnType<typeof getDb>;
+export type { Queryable };
+
+export * from './outbox.service.js';
+export * from './consumer.js';
+export * from './cache.service.js';
+export * from './storage.service.js';
+export * from './magic-bytes.js';
+export * from './media.service.js';
+export * from './schema.js';
+export * from './audit.service.js';
+export * from './audit-sanitizer.js';
+export * from './audit-port.js';
+export * from './tracer.js';
+export * from './metrics.service.js';
+export * from './feature-flag.service.js';
+export * from './database.js';
+
 export interface Transaction {
-  // Minimal transaction placeholder for domain ports. The brand keeps the
-  // empty-interface lint rule honest until the real postgres transaction type
-  // lands with outbox/worker work (T029); callers must not construct it.
+  // Real postgres transaction or queryable client
   readonly _brand?: unique symbol;
 }
 
 export interface UnitOfWork {
-  run<T>(callback: (tx: Transaction) => Promise<T>): Promise<T>;
+  run<T>(callback: (tx: Queryable) => Promise<T>): Promise<T>;
 }
 
 export const unitOfWork: UnitOfWork = {
-  run<T>(callback: (tx: Transaction) => Promise<T>): Promise<T> {
-    // Real implementation opens db.begin() here (T029). Until then the
-    // placeholder resolves without touching the database.
-    const tx: Transaction = {};
-    return callback(tx);
+  async run<T>(callback: (tx: Queryable) => Promise<T>): Promise<T> {
+    return (await getDb().begin((tx) => callback(tx as unknown as Queryable))) as T;
   },
 };
 

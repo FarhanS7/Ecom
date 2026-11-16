@@ -13,6 +13,7 @@ import type { TxClient } from '../identity/auth.service.js';
 import { authorizeStore } from './permissions.js';
 import { recordAudit } from '../platform/audit-port.js';
 import type { StorePermission, StoreRole } from './permissions.js';
+import type { AdminSellerSummaryDto, StoreMemberDto, StoreTeamSummaryDto } from '@shopscale/contracts';
 
 export type OnboardingFailure = 'NOT_FOUND' | 'FORBIDDEN' | 'CONFLICT';
 
@@ -45,6 +46,59 @@ export async function requirePlatformAdmin(sql: Sql = getDb(), userId: string): 
   if (rows.length === 0) {
     throw new OnboardingError('FORBIDDEN', 'Platform admin access required.');
   }
+}
+
+/** Support or admin gate for support and dispute routes. */
+export async function requireSupportOrAdmin(
+  sql: Sql = getDb(),
+  userId: string,
+): Promise<{ isAdmin: boolean; isSupport: boolean }> {
+  const rows = (await sql.unsafe(
+    `SELECT r."key" FROM "user_platform_roles" ur JOIN "platform_roles" r ON r."id" = ur."role_id" WHERE ur."user_id" = $1 AND r."key" IN ('admin', 'support');`,
+    [userId],
+  )) as unknown as Array<{ key: string }>;
+  const roles = rows.map((r) => r.key);
+  const isAdmin = roles.includes('admin');
+  const isSupport = roles.includes('support');
+  if (!isAdmin && !isSupport) {
+    throw new OnboardingError('FORBIDDEN', 'Support or admin access required.');
+  }
+  return { isAdmin, isSupport };
+}
+
+/** List all stores for platform admin review (all or filtered by status). */
+export async function listAdminStores(
+  input: { status?: 'pending' | 'active' | 'suspended' | undefined; actorId: string },
+  sql: Sql = getDb(),
+): Promise<AdminSellerSummaryDto[]> {
+  await requirePlatformAdmin(sql, input.actorId);
+  const rows = (await sql.unsafe(
+    `SELECT s."id", s."business_id", s."slug", s."name", s."status", s."created_at", u."email_normalized" AS owner_email
+     FROM "stores" s
+     JOIN "businesses" b ON b."id" = s."business_id"
+     JOIN "users" u ON u."id" = b."owner_user_id"
+     ${input.status ? `WHERE s."status" = $1` : ``}
+     ORDER BY s."created_at" DESC;`,
+    input.status ? [input.status] : [],
+  )) as unknown as Array<{
+    id: string;
+    business_id: string;
+    slug: string;
+    name: string;
+    status: 'pending' | 'active' | 'suspended';
+    created_at: Date | string;
+    owner_email: string;
+  }>;
+
+  return rows.map((r) => ({
+    id: r.id,
+    businessId: r.business_id,
+    slug: r.slug,
+    name: r.name,
+    status: r.status,
+    ownerEmail: r.owner_email,
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+  }));
 }
 
 /** Guard: refusing to leave a store with zero active owners. */
@@ -370,4 +424,70 @@ export async function updateMember(
     );
     return { storeId: input.storeId, userId: input.targetUserId, role: nextRole, status: nextStatus };
   });
+}
+
+/**
+ * List all members and active pending invitations for a store.
+ * Strictly gated by team:manage permission.
+ */
+export async function listStoreTeam(
+  input: { storeId: string; actorId: string },
+  sql: Sql = getDb(),
+): Promise<StoreTeamSummaryDto> {
+  const canManage = await authorizeStore(
+    { userId: input.actorId, storeId: input.storeId, permission: 'team:manage' satisfies StorePermission },
+    sql,
+  );
+  if (!canManage) throw new OnboardingError('NOT_FOUND', 'Store not found.');
+
+  const memberRows = (await sql.unsafe(
+    `SELECT m."user_id", u."email_normalized" AS email, r."key" AS role, m."status"
+     FROM "store_memberships" m
+     JOIN "users" u ON u."id" = m."user_id"
+     JOIN "store_roles" r ON r."id" = m."role_id"
+     WHERE m."store_id" = $1
+     ORDER BY m."status" ASC, r."key" ASC;`,
+    [input.storeId],
+  )) as unknown as Array<{
+    user_id: string;
+    email: string;
+    role: string;
+    status: string;
+  }>;
+
+  const invitationRows = (await sql.unsafe(
+    `SELECT i."id", i."email_normalized" AS email, r."key" AS role, i."expires_at", i."created_at"
+     FROM "store_invitations" i
+     JOIN "store_roles" r ON r."id" = i."role_id"
+     WHERE i."store_id" = $1 AND i."accepted_at" IS NULL AND i."expires_at" > now()
+     ORDER BY i."created_at" DESC;`,
+    [input.storeId],
+  )) as unknown as Array<{
+    id: string;
+    email: string;
+    role: string;
+    expires_at: Date;
+    created_at: Date;
+  }>;
+
+  const members: StoreMemberDto[] = memberRows.map((r) => ({
+    userId: r.user_id,
+    email: r.email,
+    role: r.role as 'owner' | 'manager' | 'catalog-editor' | 'fulfillment',
+    status: r.status as 'active' | 'revoked',
+  }));
+
+  const invitations = invitationRows.map((r) => ({
+    id: r.id,
+    email: r.email,
+    role: r.role as 'owner' | 'manager' | 'catalog-editor' | 'fulfillment',
+    expiresAt: r.expires_at instanceof Date ? r.expires_at.toISOString() : String(r.expires_at),
+    createdAt: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+  }));
+
+  return {
+    storeId: input.storeId,
+    members,
+    invitations,
+  };
 }

@@ -179,14 +179,23 @@ describe('scoped staff (T028a)', () => {
   });
 });
 
-describe('seed sizes (T028a)', () => {
-  it('implements Tier S and refuses the streaming tiers by name', () => {
+describe('seed sizes (TASK-077)', () => {
+  it('implements Tier S, M, L, and XL shapes with increasing catalog capacity', () => {
     expect(shapeForSize('s')).toEqual(TIER_S_SHAPE);
-    const catalogued = TIER_S_SHAPE.productsPerStore * (TIER_S_SHAPE.stores - TIER_S_SHAPE.emptyStores);
-    expect(catalogued).toBeGreaterThanOrEqual(1000);
+    const cataloguedS = TIER_S_SHAPE.productsPerStore * (TIER_S_SHAPE.stores - TIER_S_SHAPE.emptyStores);
+    expect(cataloguedS).toBeGreaterThanOrEqual(1000);
     expect(TIER_S_SHAPE.emptyStores).toBeGreaterThanOrEqual(1);
-    for (const size of ['m', 'l', 'xl'] as const) {
-      expect(() => shapeForSize(size)).toThrow(/T077/);
-    }
+
+    const shapeM = shapeForSize('m');
+    const cataloguedM = shapeM.productsPerStore * (shapeM.stores - shapeM.emptyStores);
+    expect(cataloguedM).toBeGreaterThanOrEqual(9900);
+
+    const shapeL = shapeForSize('l');
+    const cataloguedL = shapeL.productsPerStore * (shapeL.stores - shapeL.emptyStores);
+    expect(cataloguedL).toBeGreaterThanOrEqual(99_000);
+
+    const shapeXL = shapeForSize('xl');
+    const cataloguedXL = shapeXL.productsPerStore * (shapeXL.stores - shapeXL.emptyStores);
+    expect(cataloguedXL).toBeGreaterThanOrEqual(990_000);
   });
 });
