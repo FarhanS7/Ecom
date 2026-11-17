@@ -59,6 +59,13 @@ tmp/
 temp/
 *.tmp
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
 # Skills / Downloaded references (excluded from workspace)
 skills/
 
